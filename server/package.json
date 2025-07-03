@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "cross-env ENVIROMENT=DEV nodemon",
+    "start": "cross-env ENVIROMENT=DEV nodemon",
     "prod": "cross-env ENVIROMENT=PROD nodemon",
     "build": "tsup ./src/index.ts",
     "seed": "tsx ./src/.scripts/runSeeder.ts",
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/multer": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "^8.22.0",
     "cross-env": "^7.0.3",
@@ -33,11 +34,15 @@
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
+    "axios": "^1.10.0",
     "chalk": "^5.4.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "execa": "^9.5.2",
     "express": "^4.21.2",
+    "fs": "^0.0.1-security",
+    "multer": "^2.0.1",
+    "openai": "^5.8.2",
     "prisma": "^6.2.1"
   },
   "prisma": {
