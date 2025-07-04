@@ -1,13 +1,16 @@
 // routes.tsx or router.tsx
 import { createBrowserRouter } from "react-router-dom";
 
-import roleRoutes from "./role/roleRouter"; // <== Modularized
+import billRoutes from "./bill/billRouter"; // <== Modularized
 import Main from "./main/Main";
 import ErrorPage from "./ErrorPage";
 import Login from "./main/Login";
 import Landing from "./main/Landing";
 import AppLayout from "@/layout/AppLayout";
-import RoleLayout from "@/layout/RoleLayout";
+import RoleLayout from "@/layout/BillLayout";
+import CameraScreen from "./main/CameraScreen";
+import FeatureLayout from "@/layout/BillLayout";
+import BillLayout from "@/layout/BillLayout";
 
 export const router = createBrowserRouter([
   {
@@ -27,14 +30,15 @@ export const router = createBrowserRouter([
         path: "login",
         element: <Login />,
       },
-
-      // Other public routes that are based on role can be added here
-      // For example: /admin/dasboard, /user/profile, etc.
-      {
-        path: "role",
-        element: <RoleLayout />,
-        children: roleRoutes, // <== Nest admin routes
-      },
     ],
+  },
+  {
+    path: "/app/camera",
+    element: <CameraScreen />,
+  },
+  {
+    path: "/app/bills",
+    element: <BillLayout />,
+    children: billRoutes,
   },
 ]);

@@ -1,14 +1,12 @@
-import BottomNav from "@/components/main/BottomNav";
 import React from "react";
 import { Outlet } from "react-router-dom";
 
-const AppLayout = () => {
+const BillLayout = () => {
   return (
     <div>
       <Outlet />
-      <BottomNav />
     </div>
   );
 };
 
-export default AppLayout;
+export default BillLayout;

@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+@theme {
+  --color-mainBgColor: #301934;
+  --color-mainContrastColor: #f3f4f6;
+}

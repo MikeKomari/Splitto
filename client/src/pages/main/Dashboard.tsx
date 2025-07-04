@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import {
   Camera,
-  type Plus,
+  Plus,
   Receipt,
   Users,
   ArrowLeft,
@@ -10,14 +10,13 @@ import {
   Search,
   Bell,
 } from "lucide-react";
-import { Bill } from "@/types/types";
-import BottomNav from "@/components/main/BottomNav";
+import { Bill } from "../types";
 
-interface LandingProps {
-  bills?: Bill[];
+interface DashboardProps {
+  bills: Bill[];
 }
 
-const Landing: React.FC<LandingProps> = ({ bills }) => {
+const Dashboard: React.FC<DashboardProps> = ({ bills }) => {
   const totalUnpaid = 430.0; // Mock data to match design
   const recentBills = [
     {
@@ -42,7 +41,7 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white">
-        <div className="max-w-5xl max-md:max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
+        <div className="max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Menu className="h-6 w-6 text-gray-600" />
             <div className="flex items-center space-x-4">
@@ -131,9 +130,23 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
             </div>
           </div>
         </div>
+
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+          <div className="max-w-5xl max-md:max-w-md mx-auto px-4 py-2">
+            <div className="flex justify-center">
+              <Link
+                to="/app/camera"
+                className="bg-mainBgColor text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <Camera className="h-6 w-6" />
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Landing;
+export default Dashboard;
