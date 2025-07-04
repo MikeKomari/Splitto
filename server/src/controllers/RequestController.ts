@@ -3,6 +3,10 @@ import axios from "axios";
 import OpenAI from "openai";
 import multer from "multer";
 import fs from "fs/promises";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -52,6 +56,7 @@ export const RequestSplitBill: RequestHandler[] = [
                   `{
                     "items": [
                       {
+                        "item_id": number,
                         "item_name": "string",
                         "quantity": number,
                         "pricePerUnit": number
@@ -62,7 +67,10 @@ export const RequestSplitBill: RequestHandler[] = [
                       "add_charges": {
                         "PB1": number,
                         "service_charge": number
-                      }
+                      },
+                      "discount" : {
+                        ...
+                      },
                     }
                   }`,
               },
@@ -116,7 +124,6 @@ export const OCRSplitBill: RequestHandler[] = [
         });
         return;
       }
-      const url;
       // Implement OCR logic here
       res.json({ message: "OCR functionality not implemented yet" });
     } catch (e) {
@@ -125,3 +132,41 @@ export const OCRSplitBill: RequestHandler[] = [
     }
   },
 ];
+
+export const SaveSplitBill: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.params;
+    const splitBillData = req.body;
+    if (
+      !splitBillData ||
+      !Array.isArray(splitBillData.people) ||
+      splitBillData.people.length === 0
+    ) {
+      res.status(400).json({ message: "Invalid split bill data: missing people" });
+      return;
+    }
+
+    await prisma.splitBill.create({
+      data: {
+        user: {
+          connect: { id: splitBillData.userId },
+        },
+        people: {
+          create: splitBillData.people.map((person: any) => ({
+            name: person.name,
+            items: person.items,
+            subtotals: person.subtotals,
+          })),
+        },
+      },
+      include: {
+        people: true,
+      },
+    });
+
+    res.status(201).json("Split Bill Data Successfully Created");
+  } catch (e) {
+    console.error("Error in SaveSplitBill:", e);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
