@@ -1,54 +1,41 @@
-from paddleocr import PaddleOCR
-import cv2
-import re
 
-# Load PaddleOCR
-ocr = PaddleOCR(use_angle_cls=True, lang='en')  # Ganti 'en' sesuai kebutuhan
+# 2. Imports
+from transformers import DonutProcessor, VisionEncoderDecoderModel
+from PIL import Image
+import torch
 
-# Load and preprocess image
-img_path = "SampleData/Prio2.JPG"
-img = cv2.imread(img_path)
+# 3. Load processor and model (with trust_remote_code for Donut)
+processor = DonutProcessor.from_pretrained("naver-clova-ix/donut-base-finetuned-rvlcdip")
+model = VisionEncoderDecoderModel.from_pretrained(
+    "naver-clova-ix/donut-base-finetuned-rvlcdip",
+    trust_remote_code=True,
+)
 
-# Perform OCR using PaddleOCR
-results = ocr.ocr(img_path, cls=True)
+# 4. Move model to GPU if available
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model.to(device)
+model.eval()
 
-# Extract all detected lines (flatten and lowercase)
-lines = []
-for line in results[0]:
-    text = line[1][0].strip().lower()
-    if text:
-        lines.append(text)
+# (Optional) Lower precision to reduce memory footprint
+# model.half()
 
-# Function to parse quantity, item, and price
-def parse_line(line):
-    # Pattern: "1x nasi goreng 15000" or "2 nasi goreng 15000"
-    match = re.match(r"(\d+)\s*x?\s*(.+?)\s+(\d{3,})$", line)
-    if match:
-        qty, item, price = match.groups()
-        return {'qty': int(qty), 'item': item.strip(), 'price': int(price)}
+# 5. Load your image
+image = Image.open("your_receipt.jpg").convert("RGB")
 
-    # Pattern: "nasi goreng x1 15000"
-    match = re.match(r"(.+?)\s*x\s*(\d+)\s+(\d{3,})$", line)
-    if match:
-        item, qty, price = match.groups()
-        return {'qty': int(qty), 'item': item.strip(), 'price': int(price)}
 
-    # Pattern: "nasi goreng 15000" (assume qty = 1)
-    match = re.match(r"(.+?)\s+(\d{3,})$", line)
-    if match:
-        item, price = match.groups()
-        return {'qty': 1, 'item': item.strip(), 'price': int(price)}
 
-    return None
 
-# Apply parsing to each line
-parsed_items = []
-for line in lines:
-    parsed = parse_line(line)
-    if parsed:
-        parsed_items.append(parsed)
+# 6. Preprocess input with DonutProcessor
+pixel_values = processor(image, return_tensors="pt").pixel_values.to(device)
 
-# Output results
-print("\n--- Parsed Items ---")
-for r in parsed_items:
-    print(f"{r['qty']}x {r['item']} - Rp{r['price']}")
+# 7. Generate output
+with torch.no_grad():
+    output_ids = model.generate(
+        pixel_values,
+        max_length=512,
+        # optionally `torch_dtype=model.dtype` if using half()
+    )
+
+# 8. Decode result
+result = processor.batch_decode(output_ids, skip_special_tokens=True)[0]
+print(result)

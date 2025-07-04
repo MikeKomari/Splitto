@@ -5,6 +5,7 @@ import { AppError } from "./utils/http/AppError";
 import { STATUS } from "./utils/http/statusCodes";
 import { ErrorController } from "./controllers";
 import featureRouter from "./routes/feature";
+import { authRouter } from "./routes/auth";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(express.json());
  */
 app.use(router);
 app.use("/api", featureRouter);
+app.use("/api",authRouter)
 
 /**
  * Handle requests to undefined routes

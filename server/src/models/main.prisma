@@ -8,3 +8,35 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model user{
+  id                String @id @default(uuid())
+  userName          String 
+  email             String @unique
+  password          String 
+  profilePicturPath String?
+  splitBills SplitBill[]
+}
+
+model SplitBill {
+  id      String            @id @default(cuid())
+  people  SplitBillPerson[]
+  userId  String
+  user    user              @relation(fields: [userId], references: [id])
+}
+
+model SplitBillPerson {
+  id          String     @id @default(cuid())
+  name        String
+  items       Item[]
+  splitBill   SplitBill  @relation(fields: [splitBillId], references: [id])
+  splitBillId String
+}
+
+model Item {
+  id              String          @id @default(cuid())
+  name            String
+  subtotal        Float
+  person          SplitBillPerson @relation(fields: [personId], references: [id])
+  personId        String
+}
