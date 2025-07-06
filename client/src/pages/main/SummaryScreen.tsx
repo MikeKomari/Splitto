@@ -1,43 +1,58 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Share2, ChevronDown, ChevronUp, Info } from "lucide-react";
+import type { BillItem, PersonInBill } from "@/types/types";
 
 const SummaryScreen = () => {
   const navigate = useNavigate();
-  const [expandedPerson, setExpandedPerson] = useState<string | null>(null);
+  const location = useLocation();
+  const initialItems = location.state?.items || [];
+  const [items, setItems] = useState<BillItem[]>(initialItems);
+  const [people, setPeople] = useState<PersonInBill[]>(
+    location.state?.people || []
+  );
+  const billHeaderData = location.state?.billHeaderData || {
+    name: "Bill Name",
+    date: new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }),
+  };
+  const [expandedPerson, setExpandedPerson] = useState<number | null>(null);
 
-  const people = [
-    {
-      id: "1",
-      name: "Jelly",
-      color: "bg-blue-500",
-      total: 12.63,
-      items: ["Caesar Salad"],
-    },
-    {
-      id: "2",
-      name: "Amanda",
-      color: "bg-orange-500",
-      total: 18.4,
-      items: ["Cappuccino", "Caesar Salad"],
-    },
-    {
-      id: "3",
-      name: "Billie",
-      color: "bg-mainBgColor",
-      total: 4.96,
-      items: ["Iced Tea"],
-    },
-    {
-      id: "4",
-      name: "Charlie",
-      color: "bg-yellow-500",
-      total: 8.78,
-      items: ["Chocolate Donut"],
-    },
-  ];
+  // const people = [
+  //   {
+  //     id: "1",
+  //     name: "Jelly",
+  //     color: "bg-blue-500",
+  //     total: 12.63,
+  //     items: ["Caesar Salad"],
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "Amanda",
+  //     color: "bg-orange-500",
+  //     total: 18.4,
+  //     items: ["Cappuccino", "Caesar Salad"],
+  //   },
+  //   {
+  //     id: "3",
+  //     name: "Billie",
+  //     color: "bg-mainBgColor",
+  //     total: 4.96,
+  //     items: ["Iced Tea"],
+  //   },
+  //   {
+  //     id: "4",
+  //     name: "Charlie",
+  //     color: "bg-yellow-500",
+  //     total: 8.78,
+  //     items: ["Chocolate Donut"],
+  //   },
+  // ];
 
-  const toggleExpanded = (personId: string) => {
+  const toggleExpanded = (personId: number) => {
     setExpandedPerson(expandedPerson === personId ? null : personId);
   };
 
@@ -47,7 +62,7 @@ const SummaryScreen = () => {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => navigate("/app/assign/1")} className="p-1">
+            <button onClick={() => navigate(-1)} className="p-1">
               <ArrowLeft className="h-6 w-6 text-gray-600" />
             </button>
             <h1 className="text-lg font-semibold text-gray-900">
@@ -63,8 +78,10 @@ const SummaryScreen = () => {
       <div className="max-w-5xl max-md:max-w-md mx-auto px-4 py-6">
         {/* Bill Header */}
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Gourmet Coffee</h2>
-          <p className="text-gray-600">Sept 4, 2024 • 08:36 AM</p>
+          <h2 className="text-xl font-bold text-gray-900">
+            {billHeaderData.name}
+          </h2>
+          <p className="text-gray-600">{billHeaderData.date}</p>
         </div>
 
         {/* People Summary */}
@@ -83,13 +100,11 @@ const SummaryScreen = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <div
-                        className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center mr-3`}
-                      >
-                        <span className="text-white font-bold text-sm">
-                          {person.name.charAt(0)}
-                        </span>
-                      </div>
+                      <img
+                        src={person.avatar}
+                        className="w-10 h-10 mr-3"
+                        alt=""
+                      />
                       <div>
                         <h3 className="font-semibold text-gray-900">
                           {person.name}'s Total
@@ -115,14 +130,16 @@ const SummaryScreen = () => {
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-gray-100">
                     <div className="pt-3">
-                      {person.items.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex justify-between text-sm text-gray-600 mb-1"
-                        >
-                          <span>1x {item}</span>
-                        </div>
-                      ))}
+                      {items
+                        .filter((item) => item.assignedTo?.includes(person.id))
+                        .map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between text-sm text-gray-600 mb-1"
+                          >
+                            <span>1x {item.item_name}</span>
+                          </div>
+                        ))}
                       <button className="text-blue-600 text-sm font-medium mt-2">
                         Bill Details
                       </button>

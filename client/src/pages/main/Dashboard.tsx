@@ -10,10 +10,10 @@ import {
   Search,
   Bell,
 } from "lucide-react";
-import { Bill } from "../types";
+import type { BillItem } from "@/types/types";
 
 interface DashboardProps {
-  bills: Bill[];
+  bills: BillItem[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ bills }) => {

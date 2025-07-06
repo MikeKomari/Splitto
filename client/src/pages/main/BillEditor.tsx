@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, SquarePen, Check } from "lucide-react";
 import BillHeader from "@/components/bill/BillHeader";
 import BillDashboard from "@/components/bill/BillDashboard";
-
+export type BillHeaderProps = {
+  name: string;
+  date: string;
+};
 const BillEditor = () => {
   const navigate = useNavigate();
   const editButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -14,7 +17,7 @@ const BillEditor = () => {
   }));
 
   const [isEditingHeader, setIsEditingHeader] = useState<boolean>(false);
-  const [billHeader, setBillHeader] = useState({
+  const [billHeader, setBillHeader] = useState<BillHeaderProps>({
     name: "Gourmet Coffee",
     date: "Sept 4, 2024",
   });
@@ -53,7 +56,7 @@ const BillEditor = () => {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => navigate(-1)} className="p-1">
+            <button onClick={() => navigate(-1)} className="p-1 cursor-pointer">
               <ArrowLeft className="h-6 w-6 text-gray-600" />
             </button>
             <h1 className="text-lg font-semibold text-gray-900">Edit Bill</h1>
@@ -94,7 +97,7 @@ const BillEditor = () => {
         </div>
 
         {/* Bill Dashboard */}
-        <BillDashboard />
+        <BillDashboard billHeaderData={billHeader} />
       </div>
     </div>
   );

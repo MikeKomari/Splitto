@@ -10,11 +10,11 @@ import {
   Search,
   Bell,
 } from "lucide-react";
-import { Bill } from "@/types/types";
+import type { BillItem } from "@/types/types";
 import BottomNav from "@/components/main/BottomNav";
 
 interface LandingProps {
-  bills?: Bill[];
+  bills?: BillItem[];
 }
 
 const Landing: React.FC<LandingProps> = ({ bills }) => {
@@ -42,7 +42,7 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white">
-        <div className="max-w-5xl max-md:max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
+        <div className=" max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Menu className="h-6 w-6 text-gray-600" />
             <div className="flex items-center space-x-4">
@@ -57,20 +57,20 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, Jelly!
+            Welcome back, Guest!
           </h1>
           <p className="text-gray-600 mb-6">
-            You have in total{" "}
-            <span className="font-bold text-blue-600">
+            Split your bills with ease and keep track of your expenses.
+            {/* <span className="font-bold text-blue-600">
               ${totalUnpaid.toFixed(2)}
-            </span>{" "}
-            unpaid bills.
+            </span>{" "} */}
+            By clicking the button below.
           </p>
           <Link
             to="/app/camera"
             className="bg-mainBgColor text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
           >
-            Pay Bills
+            Split Bill
           </Link>
         </div>
 
@@ -86,7 +86,7 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
           </div>
 
           <div className="space-y-4">
-            {recentBills.map((bill) => (
+            {/* {recentBills.map((bill) => (
               <div key={bill.id} className="bg-white rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -110,12 +110,17 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
                   </div>
                 </div>
               </div>
-            ))}
+            ))} */}
+
+            <p className="text-gray-500 text-sm text-center">
+              Log in to view your recent bills! Although this feature is not
+              available yet!
+            </p>
           </div>
         </div>
 
         {/* Refer a Friend */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white mb-6">
+        {/* <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold mb-1">Refer a Friend</h3>
@@ -130,7 +135,7 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
               <p className="text-blue-100 text-sm">Get $5</p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

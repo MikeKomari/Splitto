@@ -1,6 +1,5 @@
 import formatDate from "@/utils/utils";
 import React, { useEffect, useRef } from "react";
-import { useFormContext } from "react-hook-form";
 type BillHeaderProps = {
   isEditing: boolean;
   exposeValue: (getter: () => { name: string; date: string }) => void;
