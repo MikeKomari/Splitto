@@ -1,8 +1,16 @@
 export type BillItem = {
-  id: string;
+  id: number;
+  item_name: string;
+  pricePerUnit: number;
+  quantity: number;
+  assignedTo: number[]; // Use number for initial profiles, string for database IDs
+};
+
+export type PersonInBill = {
+  id: number; // Use number for initial profiles, string for database IDs
   name: string;
-  price: number;
-  assignedTo: string[];
+  avatar: string;
+  total: number;
 };
 
 export type Bill = {
@@ -14,6 +22,7 @@ export type Bill = {
   tax: number;
   total: number;
   peopleCount: number;
+  participants: PersonInBill[];
 };
 
 export type Person = {
@@ -21,4 +30,5 @@ export type Person = {
   name: string;
   avatar: string;
   total: number;
+  Bills: Bill[];
 };

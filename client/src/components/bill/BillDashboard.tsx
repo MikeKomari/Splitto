@@ -1,45 +1,57 @@
+import type { BillHeaderProps } from "@/pages/main/BillEditor";
+import type { BillItem } from "@/types/types";
 import { Check, Plus, SquarePen, X } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const BillDashboard = () => {
+type BillHeaderDashboardProps = {
+  billHeaderData: BillHeaderProps;
+};
+const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
+  billHeaderData,
+}) => {
   const navigate = useNavigate();
-  const [items, setItems] = useState([
+  const [items, setItems] = useState<BillItem[]>([
     {
       id: 1,
       item_name: "Chicken Katsu Curry Udon",
       quantity: 2,
       pricePerUnit: 63000,
+      assignedTo: [],
     },
     {
       id: 2,
       item_name: "Beef Curry Udon",
       quantity: 1,
       pricePerUnit: 67000,
+      assignedTo: [],
     },
     {
       id: 3,
       item_name: "Spicy Tory Rice",
       quantity: 1,
       pricePerUnit: 63000,
+      assignedTo: [],
     },
     {
       id: 4,
       item_name: "Satsuma Butter",
       quantity: 1,
       pricePerUnit: 15000,
+      assignedTo: [],
     },
     {
       id: 5,
       item_name: "Tamagoyaki",
       quantity: 1,
       pricePerUnit: 16000,
+      assignedTo: [],
     },
     {
       id: 6,
       item_name: "Cold Ocha",
       quantity: 2,
       pricePerUnit: 16000,
+      assignedTo: [],
     },
   ]);
   const [editItemId, setEditItemId] = useState<number | null>(null);
@@ -54,7 +66,18 @@ const BillDashboard = () => {
   );
   const taxAmount = subtotal * (taxPercent / 100);
   const serviceAmount = subtotal * (servicePercent / 100);
-  const total = subtotal + taxAmount + serviceAmount;
+
+  const [discountType, setDiscountType] = useState<"percent" | "amount">(
+    "percent"
+  );
+  const [discountValue, setDiscountValue] = useState(0);
+
+  const discountAmount =
+    discountType === "percent"
+      ? subtotal * (discountValue / 100)
+      : discountValue;
+
+  const total = subtotal + taxAmount + serviceAmount - discountAmount;
 
   const updateItem = (
     id: number,
@@ -84,6 +107,7 @@ const BillDashboard = () => {
       item_name: "",
       pricePerUnit: 0,
       quantity: 1,
+      assignedTo: [],
     };
     setItems((prev) => [...prev, newItem]);
     setEditItemId(newId);
@@ -180,7 +204,7 @@ const BillDashboard = () => {
                       pattern="[0-9]*"
                     />
                   ) : (
-                    <span className="ml-1 text-gray-800 font-semibold underline decoration-dotted decoration-1 cursor-pointer">
+                    <span className="ml-1 text-gray-800 font-semibold  decoration-1 cursor-pointer">
                       {item.pricePerUnit.toLocaleString("id-ID")}
                     </span>
                   )}
@@ -191,7 +215,7 @@ const BillDashboard = () => {
                   {isEditing ? (
                     <button
                       onClick={() => setEditItemId(null)}
-                      className="text-green-600 hover:text-green-800 p-1"
+                      className="text-green-600 cursor-pointer hover:text-green-800 p-1"
                       title="Save"
                     >
                       <Check className="h-6 w-6" />
@@ -199,7 +223,7 @@ const BillDashboard = () => {
                   ) : (
                     <button
                       onClick={() => setEditItemId(item.id)}
-                      className="text-mainBgColor opacity-80 hover:text-mainBgColor hover:opacity-100 p-1"
+                      className="text-mainBgColor opacity-80 hover:text-mainBgColor hover:opacity-100 p-1 cursor-pointer"
                       title="Edit"
                     >
                       <SquarePen className="h-4 w-4" />
@@ -207,7 +231,7 @@ const BillDashboard = () => {
                   )}
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="text-red-500 hover:text-red-700 p-1"
+                    className="text-red-500 cursor-pointer hover:text-red-700 p-1"
                     title="Remove"
                   >
                     <X className="h-4 w-4" />
@@ -218,56 +242,10 @@ const BillDashboard = () => {
           );
         })}
 
-        {/* {items.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-xl p-4 flex items-center justify-between"
-          >
-            <div className="items-center grid grid-cols-8 gap-2 w-fit">
-              <span className="text-gray-600 mr-3 max-w-[30px] col-span-1">
-                {item.quantity}x
-              </span>
-              <span className="font-medium text-gray-900 col-span-3">
-                {item.item_name}
-              </span>
-
-              <div className="flex items-center col-span-2  ">
-                <span className="text-gray-500">Rp&nbsp;</span>
-                <input
-                  type="text"
-                  value={item.pricePerUnit.toLocaleString("id-ID")}
-                  onChange={(e) => {
-                    // Remove non-digit characters
-                    const raw = e.target.value.replace(/[^\d]/g, "");
-                    updateItemPrice(item.id, Number(raw) || 0);
-                  }}
-                  className=" text-left font-semibold text-gray-900 border-0 bg-transparent focus:outline-none"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                />
-              </div>
-              <div className="col-span-2 flex items-center justify-end">
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-mainBgColor opacity-80 hover:text-mainBgColor hover:opacity-100 p-1"
-                >
-                  <SquarePen className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-red-500 hover:text-red-700 p-1"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))} */}
-
         {/* Add Item Button */}
         <button
           onClick={addItem}
-          className="w-full bg-white rounded-xl p-4 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors flex items-center justify-center text-blue-600"
+          className="w-full bg-white rounded-xl p-4 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors flex items-center justify-center text-blue-600 cursor-pointer"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add Item
@@ -287,6 +265,34 @@ const BillDashboard = () => {
             <span>Subtotal</span>
             <span>Rp&nbsp;{subtotal.toLocaleString("id-ID")}</span>
           </div>
+          <div className="grid grid-cols-3 text-gray-600">
+            <span>Discount</span>
+            <div className="flex items-center justify-center gap-1">
+              <select
+                value={discountType}
+                onChange={(e) =>
+                  setDiscountType(e.target.value as "percent" | "amount")
+                }
+                className="text-blue-600 bg-transparent border-b border-blue-300 focus:outline-none text-sm"
+              >
+                <option value="percent">%</option>
+                <option value="amount">Rp</option>
+              </select>
+              <input
+                type="number"
+                value={discountValue}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setDiscountValue(value);
+                }}
+                className="text-blue-600 text-center w-[60px] bg-transparent border-b border-blue-300 focus:outline-none"
+                min={0}
+              />
+            </div>
+            <span className="text-end text-gray-600">
+              - Rp&nbsp;{discountAmount.toLocaleString("id-ID")}
+            </span>
+          </div>
           <div className="grid grid-cols-3 justify-between text-gray-600">
             <span>Tax</span>
             <div className="flex items-center justify-center ">
@@ -297,7 +303,7 @@ const BillDashboard = () => {
                   const value = Math.min(Number(e.target.value), 100);
                   setTaxPercent(value);
                 }}
-                className="text-blue-600 text-center w-[27px] bg-transparent border-b border-blue-300 focus:outline-none"
+                className="text-blue-600 text-center max-md:w-[27px] w-[30px]  bg-transparent border-b border-blue-300 focus:outline-none"
                 max={100}
               />
               <span>%</span>
@@ -316,7 +322,7 @@ const BillDashboard = () => {
                   const value = Math.min(Number(e.target.value), 100);
                   setServicePercent(value);
                 }}
-                className="text-blue-600 text-center w-[27px] bg-transparent border-b border-blue-300 focus:outline-none"
+                className="text-blue-600 text-center max-md:w-[27px] w-[30px]  bg-transparent border-b border-blue-300 focus:outline-none"
                 max={100}
               />
               <span>%</span>
@@ -336,10 +342,18 @@ const BillDashboard = () => {
 
       {/* Save Button */}
       <button
-        onClick={() => navigate("/app/bills/assign/1")}
-        className="w-full bg-mainBgColor text-white py-4 rounded-2xl font-semibold text-lg"
+        onClick={() =>
+          navigate("/app/bills/assign/1", { state: { items, billHeaderData } })
+        }
+        className="cursor-pointer hover:opacity-90 w-full bg-mainBgColor text-white py-4 rounded-2xl font-semibold text-lg"
       >
         Save Edit
+      </button>
+      <button
+        onClick={() => navigate("/app/bills/assign/1")}
+        className="cursor-pointer hover:opacity-80 w-full bg-white border-1 border-mainBgColor mt-4 text-mainBgColor py-4 rounded-2xl font-semibold text-lg"
+      >
+        Reset
       </button>
     </>
   );

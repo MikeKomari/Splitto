@@ -63,11 +63,15 @@ const CameraScreen = () => {
 
     try {
       const track = stream.getVideoTracks()[0];
-      const capabilities = track.getCapabilities();
+      // Use type assertion to access non-standard 'torch' property
+      const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
+        torch?: boolean;
+      };
 
       if (capabilities.torch) {
+        // Use type assertion to allow 'torch' constraint
         await track.applyConstraints({
-          advanced: [{ torch: !flashEnabled }],
+          advanced: [{ torch: !flashEnabled } as any],
         });
         setFlashEnabled(!flashEnabled);
       }

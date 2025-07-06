@@ -10,11 +10,11 @@ import {
   Search,
   Bell,
 } from "lucide-react";
-import { Bill } from "@/types/types";
+import type { BillItem } from "@/types/types";
 import BottomNav from "@/components/main/BottomNav";
 
 interface LandingProps {
-  bills?: Bill[];
+  bills?: BillItem[];
 }
 
 const Landing: React.FC<LandingProps> = ({ bills }) => {
@@ -42,7 +42,7 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white">
-        <div className="max-w-5xl max-md:max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
+        <div className=" max-w-5xl max-md:max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Menu className="h-6 w-6 text-gray-600" />
             <div className="flex items-center space-x-4">
@@ -57,7 +57,7 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, Jelly!
+            Welcome back, Guest!
           </h1>
           <p className="text-gray-600 mb-6">
             You have in total{" "}

@@ -4,6 +4,10 @@ import { ArrowLeft, Share2, ChevronDown, ChevronUp, Info } from "lucide-react";
 
 const SummaryScreen = () => {
   const navigate = useNavigate();
+  // const location = useLocation();
+  // const initialItems = location.state?.items || [];
+  // const [items, setItems] = useState(initialItems);
+  // const [people, setPeople] = useState(location.state?.people || []);
   const [expandedPerson, setExpandedPerson] = useState<string | null>(null);
 
   const people = [

@@ -7,7 +7,7 @@ const BottomNav = () => {
   const location = useLocation();
   const currentUrl = location.pathname;
   return (
-    <div className="fixed bottom-5 left-0 right-0 bg-white border-t border-gray-200 rounded-3xl mx-4 shadow-lg flex justify-between items-center p-4 gap-5 z-10">
+    <div className="fixed bottom-5 left-0 right-0 mx-auto max-w-5xl max-md:max-w-md  bg-white border-t border-gray-200 rounded-3xl mx-4 shadow-lg flex justify-between items-center p-4 gap-5 z-10">
       {/* Home */}
       <div
         className={`flex-1 flex justify-center items-center opacity-60 hover:opacity-100 transition-opacity ${
