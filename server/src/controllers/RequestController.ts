@@ -31,6 +31,7 @@ export const RequestSplitBill: RequestHandler[] = [
         "image/jpeg",
         "image/png",
         "image/jpg",
+        "image/JPG",
         "image/heic",
         "image/heif",
       ];
@@ -72,7 +73,8 @@ export const RequestSplitBill: RequestHandler[] = [
                         ...
                       },
                     }
-                  }`,
+                  }
+                  return without any further quotation`,
               },
               {
                 type: "image_url",
@@ -93,7 +95,6 @@ export const RequestSplitBill: RequestHandler[] = [
         return;
       }
       await fs.unlink(file.path);
-      console.log(data);
       res.json(JSON.parse(data));
     } catch (e) {
       console.error("Error in RequestSplitBill:", e);
