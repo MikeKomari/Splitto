@@ -130,7 +130,7 @@ const CameraScreen = () => {
     if (file) {
       // Preview the image
       const previewUrl = URL.createObjectURL(file);
-      setCapturedImage(previewUrl); // used in <img src={capturedImage} />
+      setCapturedImage(previewUrl);
 
       // Upload the image to your API
       uploadFile(file)
@@ -164,7 +164,8 @@ const CameraScreen = () => {
 
     const billDataToBeHandled: getBillDataPayload = {
       discountType: "amount",
-      discountValue: billDataFinal.subtotals.discount?.discount_total || 0,
+      initialDiscountValue:
+        billDataFinal.subtotals.discount?.discount_total || 0,
       items: billDataFinal.items.map((item) => ({
         id: item.id,
         item_name: item.item_name,
@@ -172,9 +173,13 @@ const CameraScreen = () => {
         pricePerUnit: item.pricePerUnit,
         assignedTo: [],
       })),
-      servicePercent: billDataFinal.subtotals.add_charges?.service_charge || 0,
-      taxPercent: billDataFinal.subtotals.add_charges?.PB1 || 0,
+      initialServicePercent:
+        billDataFinal.subtotals.add_charges?.service_charge || 0,
+      initialTaxPercent: billDataFinal.subtotals.add_charges?.PB1 || 0,
+      initialSubtotal: billDataFinal.subtotals.subtotal || 0,
     };
+
+    console.log(billDataToBeHandled);
 
     navigate("/app/bills/edit/1", { state: billDataToBeHandled });
   };
@@ -295,7 +300,10 @@ const CameraScreen = () => {
                 Bill Name
               </h3>
               <p className="text-3xl font-bold text-blue-600 mt-2">
-                Rp {billDataFinal.subtotals.grandTotal.toLocaleString("id-ID")}
+                Rp{" "}
+                {billDataFinal.subtotals.grand_totals
+                  ? billDataFinal.subtotals.grand_totals.toLocaleString("id-ID")
+                  : "0"}
               </p>
               <p className="text-sm text-gray-500">
                 {new Date().toLocaleDateString("en-US", {

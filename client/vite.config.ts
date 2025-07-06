@@ -33,7 +33,7 @@ export default defineConfig({
         name: "Splitto",
         short_name: "Splitto",
         description: "Split with ease",
-        start_url: "/app",
+        start_url: "/landingpage",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#000000",

@@ -11,8 +11,9 @@ export type BillHeaderProps = {
 const BillEditor = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const initialItems: getBillDataPayload =
-    location.state?.billDataToBeHandled || {};
+  const [initialItems, setInitialItems] = useState<getBillDataPayload | null>(
+    null
+  );
   const editButtonRef = useRef<HTMLButtonElement | null>(null);
   const billHeaderDivRef = useRef<HTMLDivElement | null>(null);
   const getInputValues = useRef<() => { name: string; date: string }>(() => ({
@@ -31,6 +32,14 @@ const BillEditor = () => {
         day: "numeric",
       }),
   });
+
+  useEffect(() => {
+    const init = location.state?.billDataToBeHandled as getBillDataPayload;
+
+    if (init) {
+      setInitialItems(init);
+    }
+  }, [initialItems]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -107,7 +116,15 @@ const BillEditor = () => {
         </div>
 
         {/* Bill Dashboard */}
-        <BillDashboard billHeaderData={billHeader} />
+        <BillDashboard
+          billHeaderData={billHeader}
+          discountType={initialItems?.discountType}
+          initialDiscountValue={initialItems?.initialDiscountValue}
+          initialServicePercent={initialItems?.initialServicePercent}
+          initialSubtotal={initialItems?.initialSubtotal}
+          items={initialItems?.items}
+          key={initialItems?.initialTaxPercent}
+        />
       </div>
     </div>
   );

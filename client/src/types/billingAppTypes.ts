@@ -1,10 +1,10 @@
 import type { BillItem } from "./types";
 
 export type getBillDataPayload = {
-  taxPercent?: number;
-  servicePercent?: number;
+  initialTaxPercent?: number;
+  initialServicePercent?: number;
   discountType?: "percent" | "amount";
-  discountValue?: number;
+  initialDiscountValue?: number;
   items?: BillItem[];
-  subtotal?: number;
+  initialSubtotal?: number;
 };

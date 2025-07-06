@@ -10,73 +10,75 @@ type BillHeaderDashboardProps = {
 const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
   billHeaderData,
   discountType = "amount",
+  initialDiscountValue = 0,
   items = [],
-  taxPercent = 11,
-  servicePercent = 5,
-  subtotal = 0,
+  initialTaxPercent = 11,
+  initialServicePercent = 5,
+  initialSubtotal = 0,
 }) => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<BillItem[]>([
-    {
-      id: 1,
-      item_name: "Chicken Katsu Curry Udon",
-      quantity: 2,
-      pricePerUnit: 63000,
-      assignedTo: [0, 1],
-    },
-    {
-      id: 2,
-      item_name: "Beef Curry Udon",
-      quantity: 1,
-      pricePerUnit: 67000,
-      assignedTo: [2],
-    },
-    {
-      id: 3,
-      item_name: "Spicy Tory Rice",
-      quantity: 1,
-      pricePerUnit: 63000,
-      assignedTo: [3],
-    },
-    {
-      id: 4,
-      item_name: "Satsuma Butter",
-      quantity: 1,
-      pricePerUnit: 15000,
-      assignedTo: [4],
-    },
-    {
-      id: 5,
-      item_name: "Tamagoyaki",
-      quantity: 1,
-      pricePerUnit: 16000,
-      assignedTo: [5],
-    },
-    {
-      id: 6,
-      item_name: "Cold Ocha",
-      quantity: 2,
-      pricePerUnit: 16000,
-      assignedTo: [4, 5],
-    },
-  ]);
+  // const [billItems, setBillItems] = useState<BillItem[]>([
+  //   {
+  //     id: 1,
+  //     item_name: "Chicken Katsu Curry Udon",
+  //     quantity: 2,
+  //     pricePerUnit: 63000,
+  //     assignedTo: [0, 1],
+  //   },
+  //   {
+  //     id: 2,
+  //     item_name: "Beef Curry Udon",
+  //     quantity: 1,
+  //     pricePerUnit: 67000,
+  //     assignedTo: [2],
+  //   },
+  //   {
+  //     id: 3,
+  //     item_name: "Spicy Tory Rice",
+  //     quantity: 1,
+  //     pricePerUnit: 63000,
+  //     assignedTo: [3],
+  //   },
+  //   {
+  //     id: 4,
+  //     item_name: "Satsuma Butter",
+  //     quantity: 1,
+  //     pricePerUnit: 15000,
+  //     assignedTo: [4],
+  //   },
+  //   {
+  //     id: 5,
+  //     item_name: "Tamagoyaki",
+  //     quantity: 1,
+  //     pricePerUnit: 16000,
+  //     assignedTo: [5],
+  //   },
+  //   {
+  //     id: 6,
+  //     item_name: "Cold Ocha",
+  //     quantity: 2,
+  //     pricePerUnit: 16000,
+  //     assignedTo: [4, 5],
+  //   },
+  // ]);
+  const [billItems, setBillItems] = useState<BillItem[]>(items || []);
   const [editItemId, setEditItemId] = useState<number | null>(null);
   const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
   const [rawPriceMap, setRawPriceMap] = useState<Record<number, string>>({});
 
-  const [taxPercent, setTaxPercent] = useState(11); // default 11%
-  const [servicePercent, setServicePercent] = useState(5); // default 5%
-  const subtotal = items.reduce(
+  const [taxPercent, setTaxPercent] = useState(initialTaxPercent);
+  const [servicePercent, setServicePercent] = useState(initialServicePercent);
+  const subtotal = billItems.reduce(
     (sum, item) => sum + item.pricePerUnit * item.quantity,
     0
   );
   const taxAmount = subtotal * (taxPercent / 100);
   const serviceAmount = subtotal * (servicePercent / 100);
 
-  const [discountType, setDiscountType] = useState<"percent" | "amount">(
-    "percent"
-  );
-  const [discountValue, setDiscountValue] = useState(0);
+  const [discountUsedType, setDiscountUsedType] = useState<
+    "percent" | "amount"
+  >(discountType);
+  const [discountValue, setDiscountValue] = useState(initialDiscountValue);
 
   const discountAmount =
     discountType === "percent"
@@ -87,10 +89,10 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
 
   const updateItem = (
     id: number,
-    field: keyof (typeof items)[0],
+    field: keyof (typeof billItems)[0],
     value: string | number
   ) => {
-    setItems((prev) =>
+    setBillItems((prev) =>
       prev.map((item) =>
         item.id === id
           ? {
@@ -103,7 +105,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
   };
 
   const removeItem = (id: number) => {
-    setItems(items.filter((item) => item.id !== id));
+    setBillItems(billItems.filter((item) => item.id !== id));
   };
 
   const addItem = () => {
@@ -115,7 +117,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
       quantity: 1,
       assignedTo: [],
     };
-    setItems((prev) => [...prev, newItem]);
+    setBillItems((prev) => [...prev, newItem]);
     setEditItemId(newId);
     setFocusedItemId(newId);
     setRawPriceMap((prev) => ({ ...prev, [newId]: "" }));
@@ -125,7 +127,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
     <>
       {/* Items List */}
       <div className="space-y-3 mb-6 min-h-[45vh]">
-        {items.map((item) => {
+        {billItems.map((item) => {
           const isEditing = editItemId === item.id;
 
           return (
@@ -264,7 +266,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
           <div className="grid grid-cols-2  text-gray-600">
             <span>Total item</span>
             <span className="text-end">
-              {items.reduce((sum, i) => sum + i.quantity, 0)}x
+              {billItems.reduce((sum, i) => sum + i.quantity, 0)}x
             </span>
           </div>
           <div className="flex justify-between text-gray-600">
@@ -277,7 +279,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
               <select
                 value={discountType}
                 onChange={(e) =>
-                  setDiscountType(e.target.value as "percent" | "amount")
+                  setDiscountUsedType(e.target.value as "percent" | "amount")
                 }
                 className="text-blue-600 bg-transparent border-b border-blue-300 focus:outline-none text-sm"
               >
