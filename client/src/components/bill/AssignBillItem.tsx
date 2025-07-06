@@ -63,6 +63,7 @@ const AssignBillItem: React.FC<AssignBillItemProps> = ({
             if (!personData) return null; // Skip if person not found
             return (
               <ProfileItem
+                key={personData.id}
                 id={personData.id}
                 name={personData.name}
                 route={personData.avatar}

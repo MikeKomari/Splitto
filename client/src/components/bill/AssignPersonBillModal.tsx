@@ -45,7 +45,7 @@ const AssignPersonBillModal: React.FC<AssignPersonBillModalProps> = ({
                 key={index}
                 className={`relative flex flex-col items-center justify-center cursor-pointer                          
                  `}
-                onClick={() => setSelectedProfile(index)}
+                onClick={() => setSelectedProfile(profile.id)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ")
                     setSelectedProfile(index);
@@ -59,7 +59,7 @@ const AssignPersonBillModal: React.FC<AssignPersonBillModalProps> = ({
                 <span className="text-sm text-gray-800">
                   {profile.name || "Unknown"}
                 </span>
-                {selectedProfile === index && (
+                {selectedProfile === profile.id && (
                   <span className="absolute top-1/2 bottom-1/2  text-black rounded-full  text-3xl flex items-center justify-center">
                     ✓
                   </span>

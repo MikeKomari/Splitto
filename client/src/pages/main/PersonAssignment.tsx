@@ -7,51 +7,6 @@ import toast, { Toaster } from "react-hot-toast";
 import AssignBillItem from "@/components/bill/AssignBillItem";
 import ProfileItem from "@/components/bill/ProfileItem";
 
-// const initialItems = [
-//   {
-//     id: 1,
-//     item_name: "Chicken Katsu Curry Udon",
-//     quantity: 2,
-//     pricePerUnit: 63000,
-//     assignedTo: [1, 2],
-//   },
-//   {
-//     id: 2,
-//     item_name: "Beef Curry Udon",
-//     quantity: 1,
-//     pricePerUnit: 67000,
-//     assignedTo: [3],
-//   },
-//   {
-//     id: 3,
-//     item_name: "Spicy Tory Rice",
-//     quantity: 1,
-//     pricePerUnit: 63000,
-//     assignedTo: [2],
-//   },
-//   {
-//     id: 4,
-//     item_name: "Satsuma Butter",
-//     quantity: 1,
-//     pricePerUnit: 15000,
-//     assignedTo: [],
-//   },
-//   {
-//     id: 5,
-//     item_name: "Tamagoyaki",
-//     quantity: 1,
-//     pricePerUnit: 16000,
-//     assignedTo: [],
-//   },
-//   {
-//     id: 6,
-//     item_name: "Cold Ocha",
-//     quantity: 2,
-//     pricePerUnit: 16000,
-//     assignedTo: [],
-//   },
-// ];
-
 const PersonAssignment = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -123,11 +78,10 @@ const PersonAssignment = () => {
       toast.error("Please enter a valid name.");
       return;
     }
-    const randomNum = Math.floor(Math.random() * 74); // 0 to 73 inclusive
     const newPerson: PersonInBill = {
-      id: profileId,
+      id: Number(new Date()),
       name,
-      avatar: `/profile/profile1/${randomNum}.png`,
+      avatar: `/profile/profile1/${profileId}.png`,
       total: 0,
     };
     setPeople((prev) => [...prev, newPerson]);
@@ -166,7 +120,9 @@ const PersonAssignment = () => {
       return;
     }
 
-    navigate("/app/bills/summary/1", { state: { items, people } });
+    navigate("/app/bills/summary/1", {
+      state: { items, people, billHeaderData },
+    });
   };
 
   return (
