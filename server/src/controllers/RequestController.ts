@@ -53,7 +53,7 @@ export const RequestSplitBill: RequestHandler[] = [
               {
                 type: "text",
                 text:
-                  `From this image, analyze for the items name, quantity and prices and the totals, account for the taxes too (PB1 and such), service charge if exist and subtotal following this JSON schema ONLY, no additional info except the given data and no string:\n\n` +
+                  `From this image, analyze for the items name, quantity and prices and the sub totals(before tax), grandTotals, account for the taxes too (PB1 and such), service charge if exist and subtotal following this JSON schema ONLY, no additional info except the given data and no string:\n\n` +
                   `{
                     "items": [
                       {
@@ -64,14 +64,17 @@ export const RequestSplitBill: RequestHandler[] = [
                       }
                     ],
                     "subtotals": {
-                      "grandTotal": number,
+                      "subtotal": number,
                       "add_charges": {
                         "PB1": number,
                         "service_charge": number
                       },
+                      "grand_totals": number,
                       "discount" : {
-                        ...
+                        "discount_total": number,
+                        "discount_percentage": number,
                       },
+                      "price_after_discount": number,
                     }
                   }
                   return without any further quotation just direct json format`,
@@ -94,7 +97,6 @@ export const RequestSplitBill: RequestHandler[] = [
         res.status(400).json({ message: "No data returned from OpenAI" });
         return;
       }
-      console.log(data);
       await fs.unlink(file.path);
       res.json(JSON.parse(data));
     } catch (e) {
