@@ -74,7 +74,7 @@ export const RequestSplitBill: RequestHandler[] = [
                       },
                     }
                   }
-                  return without any further quotation`,
+                  return without any further quotation just direct json format`,
               },
               {
                 type: "image_url",
@@ -86,7 +86,7 @@ export const RequestSplitBill: RequestHandler[] = [
           },
         ],
         temperature: 1,
-        max_tokens: 300,
+        max_tokens: 2048,
         top_p: 1,
       });
       const data = await response.choices[0].message.content;
@@ -94,6 +94,7 @@ export const RequestSplitBill: RequestHandler[] = [
         res.status(400).json({ message: "No data returned from OpenAI" });
         return;
       }
+      console.log(data);
       await fs.unlink(file.path);
       res.json(JSON.parse(data));
     } catch (e) {
