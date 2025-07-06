@@ -8,11 +8,16 @@ import Landing from "./main/Landing";
 import AppLayout from "@/layout/AppLayout";
 import CameraScreen from "./main/CameraScreen";
 import BillLayout from "@/layout/BillLayout";
+import LandingPage from "./LandingPages";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Main />,
+  },
+  {
+    path: "/landingpage",
+    element: <LandingPage />,
   },
   {
     path: "/app",
