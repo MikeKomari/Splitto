@@ -33,8 +33,6 @@ const PersonAssignment = () => {
     { id: 7, name: "Jordan", avatar: "/profile/profile1/8.png", total: 0 },
   ]);
 
-  const taxRate = 0.08;
-
   const togglePersonAssignment = (itemId: number, personId: number) => {
     setItems((prev) =>
       prev.map((item) =>
@@ -109,16 +107,18 @@ const PersonAssignment = () => {
       (acc, person) => acc + person.assignedTo.length,
       0
     );
-    console.log(totalItems, totalPeople);
 
     if (totalPeople === 0) {
       toast.error("No people assigned to items.");
       return;
     }
+
     if (totalItems !== totalPeople) {
       toast.error("Total items and people assigned do not match.");
       return;
     }
+
+    calculateTotalsWithoutTax(people, items);
 
     navigate("/app/bills/summary/1", {
       state: { items, people, billHeaderData },

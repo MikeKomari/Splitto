@@ -1,13 +1,19 @@
 import type { BillHeaderProps } from "@/pages/main/BillEditor";
+import type { getBillDataPayload } from "@/types/billingAppTypes";
 import type { BillItem } from "@/types/types";
 import { Check, Plus, SquarePen, X } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 type BillHeaderDashboardProps = {
   billHeaderData: BillHeaderProps;
-};
+} & getBillDataPayload;
 const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
   billHeaderData,
+  discountType = "amount",
+  items = [],
+  taxPercent = 11,
+  servicePercent = 5,
+  subtotal = 0,
 }) => {
   const navigate = useNavigate();
   const [items, setItems] = useState<BillItem[]>([
@@ -350,7 +356,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
         Save Edit
       </button>
       <button
-        onClick={() => navigate("/app/bills/assign/1")}
+        onClick={() => navigate("/app")}
         className="cursor-pointer hover:opacity-80 w-full bg-white border-1 border-mainBgColor mt-4 text-mainBgColor py-4 rounded-2xl font-semibold text-lg"
       >
         Reset

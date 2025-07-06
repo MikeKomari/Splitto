@@ -110,7 +110,7 @@ const SummaryScreen = () => {
                           {person.name}'s Total
                         </h3>
                         <p className="text-lg font-bold text-gray-900">
-                          ${person.total.toFixed(2)}
+                          Rp {person.total.toLocaleString("id-ID")}
                         </p>
                       </div>
                     </div>
@@ -138,11 +138,16 @@ const SummaryScreen = () => {
                             className="flex justify-between text-sm text-gray-600 mb-1"
                           >
                             <span>1x {item.item_name}</span>
+                            <span>Rp {item.pricePerUnit} / 1x</span>
                           </div>
                         ))}
+
                       <button className="text-blue-600 text-sm font-medium mt-2">
                         Bill Details
                       </button>
+
+                      {/* Tax */}
+                      {/* Service */}
                     </div>
                   </div>
                 )}

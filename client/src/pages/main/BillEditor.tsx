@@ -1,14 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, SquarePen, Check } from "lucide-react";
 import BillHeader from "@/components/bill/BillHeader";
 import BillDashboard from "@/components/bill/BillDashboard";
+import type { getBillDataPayload } from "@/types/billingAppTypes";
 export type BillHeaderProps = {
   name: string;
   date: string;
 };
 const BillEditor = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialItems: getBillDataPayload =
+    location.state?.billDataToBeHandled || {};
   const editButtonRef = useRef<HTMLButtonElement | null>(null);
   const billHeaderDivRef = useRef<HTMLDivElement | null>(null);
   const getInputValues = useRef<() => { name: string; date: string }>(() => ({
@@ -18,8 +22,14 @@ const BillEditor = () => {
 
   const [isEditingHeader, setIsEditingHeader] = useState<boolean>(false);
   const [billHeader, setBillHeader] = useState<BillHeaderProps>({
-    name: "Gourmet Coffee",
-    date: "Sept 4, 2024",
+    name: "Bill Name",
+    date:
+      "" +
+      new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
   });
 
   useEffect(() => {

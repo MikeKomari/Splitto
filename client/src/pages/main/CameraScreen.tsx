@@ -9,13 +9,19 @@ import {
   Zap,
   ZapOff,
 } from "lucide-react";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import useGetBillData, { billData } from "@/hooks/useGetBillData";
+import { boolean, set } from "zod";
+import type { getBillDataPayload } from "@/types/billingAppTypes";
 
 const CameraScreen = () => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { uploadFile, isLoading, error, billData } = useGetBillData();
+  const [billDataFinal, setBillDataFinal] = useState<billData | null>(null);
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -72,6 +78,7 @@ const CameraScreen = () => {
       if (capabilities.torch) {
         // Use type assertion to allow 'torch' constraint
         await track.applyConstraints({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           advanced: [{ torch: !flashEnabled } as any],
         });
         setFlashEnabled(!flashEnabled);
@@ -94,33 +101,48 @@ const CameraScreen = () => {
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0);
 
-    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.8);
-    setCapturedImage(imageDataUrl);
+    canvas.toBlob(
+      async (blob) => {
+        if (!blob) return;
 
-    // Simulate scanning process
-    setIsScanning(true);
-    setTimeout(() => {
-      setScanResult(true);
-      setIsScanning(false);
-    }, 3000);
+        const file = new File([blob], "captured.jpg", { type: "image/jpeg" });
+        const imageUrl = URL.createObjectURL(file);
+        setCapturedImage(imageUrl);
+
+        uploadFile(file)
+          .then((data) => {
+            console.log("Uploaded and parsed:", data);
+            if (data !== undefined) {
+              setBillDataFinal(data); // Optional if you're using it locally
+            }
+          })
+          .catch((error) => {
+            console.error("Upload error:", error);
+          });
+      },
+      "image/jpeg",
+      0.8
+    );
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageDataUrl = e.target?.result as string;
-        setCapturedImage(imageDataUrl);
+      // Preview the image
+      const previewUrl = URL.createObjectURL(file);
+      setCapturedImage(previewUrl); // used in <img src={capturedImage} />
 
-        // Simulate scanning process
-        setIsScanning(true);
-        setTimeout(() => {
-          setScanResult(true);
-          setIsScanning(false);
-        }, 3000);
-      };
-      reader.readAsDataURL(file);
+      // Upload the image to your API
+      uploadFile(file)
+        .then((data) => {
+          console.log("Uploaded and parsed:", data);
+          if (data !== undefined) {
+            setBillDataFinal(data); // Optional if you're using it locally
+          }
+        })
+        .catch((error) => {
+          toast.error("Upload error:", error);
+        });
     }
   };
 
@@ -135,7 +157,26 @@ const CameraScreen = () => {
   };
 
   const handleContinue = () => {
-    navigate("/app/bills/edit/1");
+    if (!billDataFinal) {
+      toast.error("No bill data available to continue.");
+      return;
+    }
+
+    const billDataToBeHandled: getBillDataPayload = {
+      discountType: "amount",
+      discountValue: billDataFinal.subtotals.discount?.discount_total || 0,
+      items: billDataFinal.items.map((item) => ({
+        id: item.id,
+        item_name: item.item_name,
+        quantity: item.quantity,
+        pricePerUnit: item.pricePerUnit,
+        assignedTo: [],
+      })),
+      servicePercent: billDataFinal.subtotals.add_charges?.service_charge || 0,
+      taxPercent: billDataFinal.subtotals.add_charges?.PB1 || 0,
+    };
+
+    navigate("/app/bills/edit/1", { state: billDataToBeHandled });
   };
 
   return (
@@ -178,7 +219,7 @@ const CameraScreen = () => {
               />
 
               {/* Scanning overlay */}
-              {isScanning && (
+              {isLoading && (
                 <div className="absolute inset-0 border-4 border-blue-500 rounded-lg animate-pulse">
                   <div className="absolute -top-2 -left-2 w-6 h-6 border-l-4 border-t-4 border-blue-500"></div>
                   <div className="absolute -top-2 -right-2 w-6 h-6 border-r-4 border-t-4 border-blue-500"></div>
@@ -236,7 +277,7 @@ const CameraScreen = () => {
           )}
 
           {/* Scanning text */}
-          {isScanning && (
+          {isLoading && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center">
               <div className="bg-black/70 rounded-lg p-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
@@ -247,25 +288,32 @@ const CameraScreen = () => {
         </div>
 
         {/* Bottom Panel */}
-        {scanResult ? (
+        {billDataFinal ? (
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6">
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Gourmet Coffee
+                Bill Name
               </h3>
-              <p className="text-gray-600">60th Ave New York</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">$44.61</p>
-              <p className="text-sm text-gray-500">Sept 4, 2024</p>
+              <p className="text-3xl font-bold text-blue-600 mt-2">
+                Rp {billDataFinal.subtotals.grandTotal.toLocaleString("id-ID")}
+              </p>
+              <p className="text-sm text-gray-500">
+                {new Date().toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </p>
             </div>
 
-            <div className="flex items-center justify-center mb-6">
+            {/* <div className="flex items-center justify-center mb-6">
               <div className="bg-mainBgColor text-white px-6 py-2 rounded-full flex items-center">
                 <span className="mr-2">Split Tax</span>
                 <div className="w-8 h-4 bg-white rounded-full relative">
                   <div className="w-4 h-4 bg-mainBgColor rounded-full absolute right-0 top-0"></div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex space-x-3">
               <button
@@ -287,36 +335,36 @@ const CameraScreen = () => {
             {/* Upload Image Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-4 bg-black/30 rounded-full hover:bg-black/50 transition-colors"
+              className="p-4 cursor-pointer bg-black/30 rounded-full hover:bg-black/50 transition-colors"
             >
-              <Image className="h-6 w-6 text-white" />
+              <Image className="h-6 w-6 cursor-pointer text-white" />
             </button>
 
             {/* Camera Capture Button */}
             <button
               onClick={capturePhoto}
-              disabled={isScanning || !!cameraError}
+              disabled={isLoading || !!cameraError}
               className="cursor-pointer p-6 bg-white rounded-full shadow-lg disabled:opacity-50 hover:shadow-xl transition-shadow"
             >
               <Camera className="h-8 w-8 text-gray-900" />
             </button>
 
             {/* Flash Toggle Button */}
-            {/* <button
-            onClick={toggleFlash}
-            disabled={!!cameraError}
-            className={`p-4 rounded-full transition-colors ${
-              flashEnabled
-                ? "bg-yellow-500 hover:bg-yellow-600"
-                : "bg-black/30 hover:bg-black/50"
-            } disabled:opacity-50`}
-          >
-            {flashEnabled ? (
-              <Zap className="h-6 w-6 text-white" />
-            ) : (
-              <ZapOff className="h-6 w-6 text-white" />
-            )}
-          </button> */}
+            <button
+              onClick={toggleFlash}
+              disabled={true}
+              className={`p-4 rounded-full transition-colors ${
+                flashEnabled
+                  ? "bg-yellow-500 hover:bg-yellow-600"
+                  : "bg-black/30 hover:bg-black/50"
+              } disabled:opacity-50`}
+            >
+              {flashEnabled ? (
+                <Zap className="h-6 w-6 text-white" />
+              ) : (
+                <ZapOff className="h-6 w-6 text-white" />
+              )}
+            </button>
           </div>
         )}
 
