@@ -44,6 +44,12 @@ export const router = createBrowserRouter([
     children: billRoutes,
   },
   {
+    path: "progress",
+    element: (
+      <HandlerPage inProgress={true} code={"102"} message="In Progress..." />
+    ),
+  },
+  {
     path: "*",
     element: <HandlerPage />,
   },

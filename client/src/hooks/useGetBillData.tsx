@@ -34,7 +34,7 @@ export type billData = {
   items: BillItem[];
   subtotals: {
     subtotal: number;
-    grandTotal: number;
+    grand_totals: number;
     add_charges: {
       PB1: number;
       service_charge: number;

@@ -123,6 +123,20 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
     setRawPriceMap((prev) => ({ ...prev, [newId]: "" }));
   };
 
+  const handleSaveEdit = () => {
+    const tempBillData = {
+      items: billItems,
+      taxPercent,
+      initialServicePercent: servicePercent,
+      discountType: discountUsedType,
+      initialDiscountValue: discountValue,
+      initialSubtotal: subtotal,
+    };
+    navigate("/app/bills/assign/1", {
+      state: { billData: tempBillData, billHeaderData },
+    });
+  };
+
   return (
     <>
       {/* Items List */}
@@ -294,7 +308,6 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
                   setDiscountValue(value);
                 }}
                 className="text-blue-600 text-center w-[60px] bg-transparent border-b border-blue-300 focus:outline-none"
-                min={0}
               />
             </div>
             <span className="text-end text-gray-600">
@@ -350,9 +363,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
 
       {/* Save Button */}
       <button
-        onClick={() =>
-          navigate("/app/bills/assign/1", { state: { items, billHeaderData } })
-        }
+        onClick={() => handleSaveEdit()}
         className="cursor-pointer hover:opacity-90 w-full bg-mainBgColor text-white py-4 rounded-2xl font-semibold text-lg"
       >
         Save Edit

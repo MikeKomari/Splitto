@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, ArrowLeft, X, ChevronDown } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { BillItem, PersonInBill } from "@/types/types";
@@ -6,35 +6,54 @@ import AddPersonModal from "@/components/modal/AddPersonModal";
 import toast, { Toaster } from "react-hot-toast";
 import AssignBillItem from "@/components/bill/AssignBillItem";
 import ProfileItem from "@/components/bill/ProfileItem";
+import type { BillHeaderProps } from "./BillEditor";
+import type { getBillDataPayload } from "@/types/billingAppTypes";
+import { set } from "zod";
+import { getToday } from "@/utils/utils";
+
+type PersonAssignmentProps = {
+  billHeaderData: BillHeaderProps;
+  billData: getBillDataPayload;
+};
 
 const PersonAssignment = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const initialItems = location.state?.items || [];
-  const billHeaderData = location.state?.billHeaderData || {
-    name: "Bill Name",
-    date: new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }),
-  };
-  const [items, setItems] = useState<BillItem[]>(initialItems);
+  const [initialData, setInitialData] = useState<PersonAssignmentProps | null>(
+    null
+  );
+
+  const [items, setItems] = useState<BillItem[] | undefined>([]);
+  const [billHeaderData, setBillHeaderData] = useState<BillHeaderProps | null>(
+    null
+  );
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [showAllPeople, setShowAllPeople] = useState(false);
   const [people, setPeople] = useState<PersonInBill[]>([
-    { id: 0, name: "Jelly", avatar: "/profile/profile1/1.png", total: 0 },
-    { id: 1, name: "Amanda", avatar: "/profile/profile1/2.png", total: 0 },
-    { id: 2, name: "Chris", avatar: "/profile/profile1/3.png", total: 0 },
-    { id: 3, name: "Sam", avatar: "/profile/profile1/4.png", total: 0 },
-    { id: 4, name: "Taylor", avatar: "/profile/profile1/5.png", total: 0 },
-    { id: 5, name: "Morgan", avatar: "/profile/profile1/6.png", total: 0 },
-    { id: 6, name: "Alex", avatar: "/profile/profile1/7.png", total: 0 },
-    { id: 7, name: "Jordan", avatar: "/profile/profile1/8.png", total: 0 },
+    { id: 0, name: "Mike", avatar: "/profile/profile1/64.png", total: 0 },
+    { id: 1, name: "Williams", avatar: "/profile/profile1/65.png", total: 0 },
+    // { id: 1, name: "Amanda", avatar: "/profile/profile1/2.png", total: 0 },
+    // { id: 2, name: "Chris", avatar: "/profile/profile1/3.png", total: 0 },
+    // { id: 3, name: "Sam", avatar: "/profile/profile1/4.png", total: 0 },
+    // { id: 4, name: "Taylor", avatar: "/profile/profile1/5.png", total: 0 },
+    // { id: 5, name: "Morgan", avatar: "/profile/profile1/6.png", total: 0 },
+    // { id: 6, name: "Alex", avatar: "/profile/profile1/7.png", total: 0 },
+    // { id: 7, name: "Jordan", avatar: "/profile/profile1/8.png", total: 0 },
   ]);
 
+  useEffect(() => {
+    const init = location.state as PersonAssignmentProps;
+    if (init) {
+      console.log(init);
+
+      setInitialData(init);
+      setItems(init.billData.items);
+      setBillHeaderData(init.billHeaderData);
+    }
+  }, []);
+
   const togglePersonAssignment = (itemId: number, personId: number) => {
-    setItems((prev) =>
+    setItems((prev = []) =>
       prev.map((item) =>
         item.id === itemId
           ? {
@@ -50,8 +69,14 @@ const PersonAssignment = () => {
 
   const calculateTotalsWithoutTax = (
     people: PersonInBill[],
-    items: typeof initialItems
-  ) => {
+    items: BillItem[] | undefined,
+    shouldSetState: boolean = true
+  ): PersonInBill[] | null => {
+    if (!people || !items || people.length === 0 || items.length === 0) {
+      toast.error("No people or items to calculate totals.");
+      return null;
+    }
+
     const updatedPeople = people.map((person) => ({ ...person, total: 0 }));
 
     items.forEach((item: BillItem) => {
@@ -67,8 +92,13 @@ const PersonAssignment = () => {
         }
       });
     });
-    setPeople(updatedPeople);
-    toast.success("Totals calculated successfully.");
+
+    if (shouldSetState) {
+      setPeople(updatedPeople);
+      toast.success("Totals calculated successfully.");
+    }
+
+    return updatedPeople;
   };
 
   const onAddPersonConfirm = (profileId: number, name: string) => {
@@ -92,7 +122,7 @@ const PersonAssignment = () => {
 
   const removePerson = (personId: number) => {
     setPeople((prev) => prev.filter((p) => p.id !== personId));
-    setItems((prev) =>
+    setItems((prev = []) =>
       prev.map((item) => ({
         ...item,
         assignedTo: item.assignedTo.filter((id) => id !== personId) as number[],
@@ -102,9 +132,14 @@ const PersonAssignment = () => {
   };
 
   const handleConfirmResult = () => {
+    if (!items || items.length === 0) {
+      toast.error("There are no items.");
+      return;
+    }
+
     const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
     const totalPeople = items.reduce(
-      (acc, person) => acc + person.assignedTo.length,
+      (acc, item) => acc + item.assignedTo.length,
       0
     );
 
@@ -118,10 +153,16 @@ const PersonAssignment = () => {
       return;
     }
 
-    calculateTotalsWithoutTax(people, items);
+    const updatedPeople = calculateTotalsWithoutTax(people, items, false);
+    if (!updatedPeople) return;
+
+    const tempBillData = {
+      ...initialData?.billData,
+      items: items,
+    };
 
     navigate("/app/bills/summary/1", {
-      state: { items, people, billHeaderData },
+      state: { billData: tempBillData, people: updatedPeople, billHeaderData },
     });
   };
 
@@ -156,9 +197,11 @@ const PersonAssignment = () => {
         <div className="max-w-5xl max-md:max-w-md mx-auto px-4 py-6">
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-gray-900">
-              {billHeaderData.name}
+              {billHeaderData?.name ? billHeaderData.name : "Bill Name"}
             </h2>
-            <p className="text-gray-600">{billHeaderData.date}</p>
+            <p className="text-gray-600">
+              {billHeaderData?.date ? billHeaderData.date : getToday()}
+            </p>
           </div>
 
           {/* People List */}
@@ -206,14 +249,15 @@ const PersonAssignment = () => {
 
           {/* Items List */}
           <div className="space-y-4 mb-6">
-            {items.map((item) => (
-              <AssignBillItem
-                item={item}
-                people={people}
-                key={item.id}
-                togglePersonAssignment={togglePersonAssignment}
-              />
-            ))}
+            {items &&
+              items.map((item) => (
+                <AssignBillItem
+                  item={item}
+                  people={people}
+                  key={item.id}
+                  togglePersonAssignment={togglePersonAssignment}
+                />
+              ))}
           </div>
 
           <div className="bg-white rounded-xl p-4 mb-6">
