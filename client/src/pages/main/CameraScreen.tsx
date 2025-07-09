@@ -141,6 +141,8 @@ const CameraScreen = () => {
     setCapturedImage(null);
     setScanResult(false);
     setIsScanning(false);
+    setBillDataFinal(null);
+    startCamera();
   };
 
   const switchCamera = () => {
