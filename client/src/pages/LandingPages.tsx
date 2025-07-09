@@ -20,13 +20,13 @@ export default function LandingPage() {
         <img
           src="/SplittoLogo.png"
           alt="Splitto App Logo"
-          className="w-32 h-32 animate-float"
+          className="w-60 h-60 animate-float"
         />
       </div>
 
       {/* App Name */}
       <div className="text-center mb-4 animate-slide-up-delayed">
-        <h1 className="text-5xl font-bold">
+        <h1 className="text-6xl font-bold">
           <span className="text-[#00529b]">S</span>
           <span className="text-[#000000]">plitto</span>
         </h1>
@@ -34,7 +34,7 @@ export default function LandingPage() {
 
       {/* Tagline */}
       <p className="text-gray-600 text-lg font-medium animate-fade-in-late">
-        Split with ease
+        Split Bill With Ease
       </p>
 
       <style>{`

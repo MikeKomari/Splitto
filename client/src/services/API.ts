@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API = axios.create({
-  baseURL: "https://splittocopy-production.up.railway.app/api",
+  baseURL: import.meta.env.VITE_BE_LINK,
 });
 
 API.interceptors.request.use(
