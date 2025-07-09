@@ -34,12 +34,13 @@ const BillEditor = () => {
   });
 
   useEffect(() => {
-    const init = location.state?.billDataToBeHandled as getBillDataPayload;
+    const init = location.state as getBillDataPayload;
+    console.log(init);
 
     if (init) {
       setInitialItems(init);
     }
-  }, [initialItems]);
+  }, [location.state]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -116,15 +117,19 @@ const BillEditor = () => {
         </div>
 
         {/* Bill Dashboard */}
-        <BillDashboard
-          billHeaderData={billHeader}
-          discountType={initialItems?.discountType}
-          initialDiscountValue={initialItems?.initialDiscountValue}
-          initialServicePercent={initialItems?.initialServicePercent}
-          initialSubtotal={initialItems?.initialSubtotal}
-          items={initialItems?.items}
-          key={initialItems?.initialTaxPercent}
-        />
+        {initialItems ? (
+          <BillDashboard
+            billHeaderData={billHeader}
+            discountType={initialItems.discountType}
+            initialDiscountValue={initialItems.initialDiscountValue}
+            initialServicePercent={initialItems.initialServicePercent}
+            initialSubtotal={initialItems.initialSubtotal}
+            items={initialItems.items}
+            key={initialItems.initialTaxPercent}
+          />
+        ) : (
+          <p className="text-center text-gray-500">Loading bill data...</p>
+        )}
       </div>
     </div>
   );

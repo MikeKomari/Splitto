@@ -29,7 +29,7 @@ const HandlerPage: React.FC<ErrorPageProps> = ({
       <p className="text-2xl font-medium">{message}</p>
       <button
         onClick={() => navigate(-1)}
-        className="mt-6 px-6 py-3 bg-white text-[#0d1b2a] rounded-xl font-semibold hover:bg-gray-200 transition"
+        className="mt-6 cursor-pointer px-6 py-3 bg-white text-[#0d1b2a] rounded-xl font-semibold hover:bg-gray-200 transition"
       >
         Go Back
       </button>

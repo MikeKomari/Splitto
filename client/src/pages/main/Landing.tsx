@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Camera,
   type Plus,
@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import type { BillItem } from "@/types/types";
 import BottomNav from "@/components/main/BottomNav";
+import type { getBillDataPayload } from "@/types/billingAppTypes";
 
 interface LandingProps {
   bills?: BillItem[];
 }
 
 const Landing: React.FC<LandingProps> = ({ bills }) => {
+  const navigate = useNavigate();
   const totalUnpaid = 430.0; // Mock data to match design
   const recentBills = [
     {
@@ -37,6 +39,18 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
       icon: "🛒",
     },
   ];
+
+  const handleSplitManual = () => {
+    const billDataToBeHandled: getBillDataPayload = {
+      discountType: "amount",
+      initialDiscountValue: 0,
+      items: [],
+      initialServicePercent: 0,
+      initialTaxPercent: 0,
+      initialSubtotal: 0,
+    };
+    navigate("/app/bills/edit/1", { state: billDataToBeHandled });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,14 +78,23 @@ const Landing: React.FC<LandingProps> = ({ bills }) => {
             {/* <span className="font-bold text-blue-600">
               ${totalUnpaid.toFixed(2)}
             </span>{" "} */}
-            By clicking the button below.
+            By clicking one of the buttons below.
           </p>
-          <Link
-            to="/app/camera"
-            className="bg-mainBgColor text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
-          >
-            Split Bill
-          </Link>
+          <div className="grid grid-cols-2 gap-4 max-w-[300px] ">
+            <Link
+              to="/app/camera"
+              className="cursor-pointer bg-mainBgColor text-white px-6 py-3 rounded-xl font-medium hover:opacity-80  inline-flex items-center text-center"
+            >
+              Capture Bill
+            </Link>
+
+            <button
+              onClick={() => handleSplitManual()}
+              className="cursor-pointer hover:opacity-80 w-full bg-white border-1 border-mainBgColor text-mainBgColor px-6 py-3 inline-flex items-center font-medium rounded-xl text-center"
+            >
+              Split Manual
+            </button>
+          </div>
         </div>
 
         {/* Recent Bills */}

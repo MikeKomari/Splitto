@@ -17,50 +17,6 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
   initialSubtotal = 0,
 }) => {
   const navigate = useNavigate();
-  // const [billItems, setBillItems] = useState<BillItem[]>([
-  //   {
-  //     id: 1,
-  //     item_name: "Chicken Katsu Curry Udon",
-  //     quantity: 2,
-  //     pricePerUnit: 63000,
-  //     assignedTo: [0, 1],
-  //   },
-  //   {
-  //     id: 2,
-  //     item_name: "Beef Curry Udon",
-  //     quantity: 1,
-  //     pricePerUnit: 67000,
-  //     assignedTo: [2],
-  //   },
-  //   {
-  //     id: 3,
-  //     item_name: "Spicy Tory Rice",
-  //     quantity: 1,
-  //     pricePerUnit: 63000,
-  //     assignedTo: [3],
-  //   },
-  //   {
-  //     id: 4,
-  //     item_name: "Satsuma Butter",
-  //     quantity: 1,
-  //     pricePerUnit: 15000,
-  //     assignedTo: [4],
-  //   },
-  //   {
-  //     id: 5,
-  //     item_name: "Tamagoyaki",
-  //     quantity: 1,
-  //     pricePerUnit: 16000,
-  //     assignedTo: [5],
-  //   },
-  //   {
-  //     id: 6,
-  //     item_name: "Cold Ocha",
-  //     quantity: 2,
-  //     pricePerUnit: 16000,
-  //     assignedTo: [4, 5],
-  //   },
-  // ]);
   const [billItems, setBillItems] = useState<BillItem[]>(items || []);
   const [editItemId, setEditItemId] = useState<number | null>(null);
   const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
@@ -121,6 +77,20 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
     setEditItemId(newId);
     setFocusedItemId(newId);
     setRawPriceMap((prev) => ({ ...prev, [newId]: "" }));
+  };
+
+  const handleSaveEdit = () => {
+    const tempBillData = {
+      items: billItems,
+      taxPercent,
+      initialServicePercent: servicePercent,
+      discountType: discountUsedType,
+      initialDiscountValue: discountValue,
+      initialSubtotal: subtotal,
+    };
+    navigate("/app/bills/assign/1", {
+      state: { billData: tempBillData, billHeaderData },
+    });
   };
 
   return (
@@ -294,7 +264,6 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
                   setDiscountValue(value);
                 }}
                 className="text-blue-600 text-center w-[60px] bg-transparent border-b border-blue-300 focus:outline-none"
-                min={0}
               />
             </div>
             <span className="text-end text-gray-600">
@@ -350,9 +319,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
 
       {/* Save Button */}
       <button
-        onClick={() =>
-          navigate("/app/bills/assign/1", { state: { items, billHeaderData } })
-        }
+        onClick={() => handleSaveEdit()}
         className="cursor-pointer hover:opacity-90 w-full bg-mainBgColor text-white py-4 rounded-2xl font-semibold text-lg"
       >
         Save Edit

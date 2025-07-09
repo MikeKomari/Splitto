@@ -1,17 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Camera,
-  Image,
-  RotateCcw,
-  X,
-  Zap,
-  ZapOff,
-} from "lucide-react";
+import { ArrowLeft, Camera, Image, RotateCcw, Zap, ZapOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-import useGetBillData, { billData } from "@/hooks/useGetBillData";
-import { boolean, set } from "zod";
+import useGetBillData, { type billData } from "@/hooks/useGetBillData";
 import type { getBillDataPayload } from "@/types/billingAppTypes";
 
 const CameraScreen = () => {
@@ -242,7 +233,7 @@ const CameraScreen = () => {
                   onClick={() => fileInputRef.current?.click()}
                   className="bg-mainBgColor text-white px-6 py-2 rounded-lg"
                 >
-                  Upload Image Instead
+                  Upload Image
                 </button>
               </div>
             </div>

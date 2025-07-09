@@ -54,7 +54,7 @@ const AssignBillItem: React.FC<AssignBillItemProps> = ({
             <span className="font-medium text-gray-900">{item.item_name}</span>
           </div>
           <span className="font-semibold text-gray-900">
-            ${(item.pricePerUnit * item.quantity).toFixed(2)}
+            Rp {(item.pricePerUnit * item.quantity).toLocaleString("id-ID")}
           </span>
         </div>
         <div className="grid grid-cols-7 space-x-2">

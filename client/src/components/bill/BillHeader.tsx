@@ -1,4 +1,4 @@
-import formatDate from "@/utils/utils";
+import { formatDate } from "@/utils/utils";
 import React, { useEffect, useRef } from "react";
 type BillHeaderProps = {
   isEditing: boolean;
