@@ -30,8 +30,8 @@ const PersonAssignment = () => {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [showAllPeople, setShowAllPeople] = useState(false);
   const [people, setPeople] = useState<PersonInBill[]>([
-    { id: 0, name: "Mike", avatar: "/profile/profile1/64.png", total: 0 },
-    { id: 1, name: "Williams", avatar: "/profile/profile1/65.png", total: 0 },
+    { id: 0, name: "Josh", avatar: "/profile/profile1/64.png", total: 0 },
+    { id: 1, name: "Emily", avatar: "/profile/profile1/65.png", total: 0 },
     // { id: 1, name: "Amanda", avatar: "/profile/profile1/2.png", total: 0 },
     // { id: 2, name: "Chris", avatar: "/profile/profile1/3.png", total: 0 },
     // { id: 3, name: "Sam", avatar: "/profile/profile1/4.png", total: 0 },
@@ -50,11 +50,11 @@ const PersonAssignment = () => {
       setItems(init.billData.items);
       setBillHeaderData(init.billHeaderData);
     }
-  }, []);
+  }, [location.state]);
 
   const togglePersonAssignment = (itemId: number, personId: number) => {
-    setItems((prev = []) =>
-      prev.map((item) =>
+    setItems((prev = []) => {
+      const updatedItems = prev.map((item) =>
         item.id === itemId
           ? {
               ...item,
@@ -63,8 +63,11 @@ const PersonAssignment = () => {
                 : [...item.assignedTo, personId],
             }
           : item
-      )
-    );
+      );
+      // Recalculate totals after assignment change
+      calculateTotalsWithoutTax(people, updatedItems, true);
+      return updatedItems;
+    });
   };
 
   const calculateTotalsWithoutTax = (
@@ -273,14 +276,6 @@ const PersonAssignment = () => {
               ))}
             </div>
           </div>
-
-          <button
-            onClick={() => calculateTotalsWithoutTax(people, items)}
-            className="w-full bg-white rounded-xl p-4 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors flex items-center justify-center text-blue-600 cursor-pointer"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Calculate Total
-          </button>
 
           <button
             onClick={handleConfirmResult}

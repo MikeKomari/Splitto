@@ -60,26 +60,28 @@ const AssignBillItem: React.FC<AssignBillItemProps> = ({
         <div className="grid grid-cols-7 space-x-2">
           {item.assignedTo.map((person) => {
             const personData = people.find((p) => p.id === person);
-            if (!personData) return null; // Skip if person not found
+            if (!personData) return null;
             return (
               <ProfileItem
-                key={personData.id}
-                id={personData.id}
-                name={personData.name}
-                route={personData.avatar}
-                toggle={() => togglePersonAssignment(item.id, personData.id)}
+          key={personData.id}
+          id={personData.id}
+          name={personData.name}
+          route={personData.avatar}
+          toggle={() => togglePersonAssignment(item.id, personData.id)}
               />
             );
           })}
-          <div className="flex items-center flex-col">
-            <button
-              onClick={handleTryingToAddMorePeople}
-              className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-            <p className="text-sm text-center">Add</p>
-          </div>
+          {item.assignedTo.length < item.quantity && (
+            <div className="flex items-center flex-col">
+              <button
+                onClick={handleTryingToAddMorePeople}
+                className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm"
+                >
+                <Plus className="h-5 w-5" />
+              </button>
+                <p className="text-sm text-center">Add</p>
+            </div>
+          )}
         </div>
       </div>
     </>
