@@ -235,7 +235,7 @@ const PersonAssignment = () => {
               <div className="flex items-center flex-col">
                 <button
                   onClick={() => setIsOpenModal(true)}
-                  className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm"
+                  className="w-10 cursor-pointer h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm"
                 >
                   <Plus className="h-5 w-5" />
                 </button>
@@ -243,7 +243,7 @@ const PersonAssignment = () => {
               </div>
             </div>
 
-            <p className="text-xs my-2 text-red-400">
+            <p className="text-xs my-2 text-blue-600">
               Click twice to remove someone!
             </p>
           </div>
@@ -279,7 +279,7 @@ const PersonAssignment = () => {
 
           <button
             onClick={handleConfirmResult}
-            className="w-full bg-black text-white mt-4 py-4 rounded-2xl font-semibold text-lg"
+            className="w-full bg-black cursor-pointer text-white mt-4 py-4 rounded-2xl font-semibold text-lg"
           >
             Confirm Result
           </button>

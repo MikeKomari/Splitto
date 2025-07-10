@@ -3,6 +3,7 @@ import type { getBillDataPayload } from "@/types/billingAppTypes";
 import type { BillItem } from "@/types/types";
 import { Check, Plus, SquarePen, X } from "lucide-react";
 import React, { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 type BillHeaderDashboardProps = {
   billHeaderData: BillHeaderProps;
@@ -80,6 +81,10 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
   };
 
   const handleSaveEdit = () => {
+    if (!items) {
+      toast.error("At least save one item before proceeding.");
+      return;
+    }
     const tempBillData = {
       items: billItems,
       taxPercent,
@@ -251,7 +256,7 @@ const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
                 onChange={(e) =>
                   setDiscountUsedType(e.target.value as "percent" | "amount")
                 }
-                className="text-blue-600 bg-transparent border-b border-blue-300 focus:outline-none text-sm"
+                className="text-blue-600 bg-transparent border-b border-blue-300 focus:outline-none text-md"
               >
                 <option value="percent">%</option>
                 <option value="amount">Rp</option>

@@ -209,7 +209,7 @@ const CameraScreen = () => {
         {/* Camera View or Captured Image */}
         <div className="absolute inset-0 flex items-center justify-center">
           {capturedImage ? (
-            <div className="relative max-w-sm max-h-96">
+            <div className="relative ">
               <img
                 src={capturedImage}
                 alt="Captured receipt"
@@ -233,7 +233,7 @@ const CameraScreen = () => {
                 <p className="text-sm mb-4">{cameraError}</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-mainBgColor text-white px-6 py-2 rounded-lg"
+                  className="cursor-pointer bg-mainBgColor text-white px-6 py-2 rounded-lg"
                 >
                   Upload Image
                 </button>

@@ -326,12 +326,12 @@ const SummaryScreen = () => {
           </div>
         </div>
 
-        <p className="my-4 text-red-400 text-center">
+        <p className="mt-4 mb-6 text-blue-600 text-center">
           Don't forget to take a screenshot!
         </p>
 
         {/* Action Buttons */}
-        <div className="flex space-x-4">
+        {/* <div className="flex space-x-4">
           <button
             onClick={expandAll}
             className="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-semibold"
@@ -344,21 +344,21 @@ const SummaryScreen = () => {
           >
             Done
           </button>
-        </div>
-        {/* <div className="flex space-x-4">
+        </div> */}
+        <div className="flex space-x-4">
           <button
             onClick={handleScreenshot}
-            className="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-semibold"
+            className="flex-1 cursor-pointer bg-gray-100 text-gray-700 py-4 rounded-2xl font-semibold"
           >
             Screenshot
           </button>
           <button
             onClick={handleDownloadPDF}
-            className="flex-1 bg-mainBgColor text-white py-4 rounded-2xl font-semibold"
+            className="flex-1 cursor-pointer bg-mainBgColor text-white py-4 rounded-2xl font-semibold"
           >
             Save to PDF
           </button>
-        </div> */}
+        </div>
       </div>
     </div>
   );
