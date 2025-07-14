@@ -31,6 +31,7 @@ export const RequestSplitBill: RequestHandler[] = [
         "image/jpeg",
         "image/png",
         "image/jpg",
+        "image/JPG",
         "image/heic",
         "image/heif",
       ];
@@ -52,7 +53,7 @@ export const RequestSplitBill: RequestHandler[] = [
               {
                 type: "text",
                 text:
-                  `From this image, analyze for the items name, quantity and prices and the totals, account for the taxes too (PB1 and such), service charge if exist and subtotal following this JSON schema ONLY, no additional info except the given data and no string:\n\n` +
+                  `From this image, analyze for the items name, quantity and prices and the sub totals(before tax), grandTotals, account for the taxes too (PB1 and such), service charge if exist and subtotal following this JSON schema ONLY, no additional info except the given data and no string:\n\n` +
                   `{
                     "items": [
                       {
@@ -63,16 +64,20 @@ export const RequestSplitBill: RequestHandler[] = [
                       }
                     ],
                     "subtotals": {
-                      "grandTotal": number,
+                      "subtotal": number,
                       "add_charges": {
                         "PB1": number,
                         "service_charge": number
                       },
+                      "grand_totals": number,
                       "discount" : {
-                        ...
+                        "discount_total": number,
+                        "discount_percentage": number,
                       },
+                      "price_after_discount": number,
                     }
-                  }`,
+                  }
+                  return without any further quotation just direct json format`,
               },
               {
                 type: "image_url",
@@ -84,7 +89,7 @@ export const RequestSplitBill: RequestHandler[] = [
           },
         ],
         temperature: 1,
-        max_tokens: 300,
+        max_tokens: 2048,
         top_p: 1,
       });
       const data = await response.choices[0].message.content;
@@ -93,7 +98,6 @@ export const RequestSplitBill: RequestHandler[] = [
         return;
       }
       await fs.unlink(file.path);
-      console.log(data);
       res.json(JSON.parse(data));
     } catch (e) {
       console.error("Error in RequestSplitBill:", e);

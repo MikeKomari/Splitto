@@ -1,67 +1,55 @@
+import type { BillHeaderProps } from "@/pages/main/BillEditor";
+import type { getBillDataPayload } from "@/types/billingAppTypes";
+import type { BillItem } from "@/types/types";
 import { Check, Plus, SquarePen, X } from "lucide-react";
 import React, { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-
-const BillDashboard = () => {
+type BillHeaderDashboardProps = {
+  billHeaderData: BillHeaderProps;
+} & getBillDataPayload;
+const BillDashboard: React.FC<BillHeaderDashboardProps> = ({
+  billHeaderData,
+  discountType = "amount",
+  initialDiscountValue = 0,
+  items = [],
+  initialTaxPercent = 11,
+  initialServicePercent = 5,
+  initialSubtotal = 0,
+}) => {
   const navigate = useNavigate();
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      item_name: "Chicken Katsu Curry Udon",
-      quantity: 2,
-      pricePerUnit: 63000,
-    },
-    {
-      id: 2,
-      item_name: "Beef Curry Udon",
-      quantity: 1,
-      pricePerUnit: 67000,
-    },
-    {
-      id: 3,
-      item_name: "Spicy Tory Rice",
-      quantity: 1,
-      pricePerUnit: 63000,
-    },
-    {
-      id: 4,
-      item_name: "Satsuma Butter",
-      quantity: 1,
-      pricePerUnit: 15000,
-    },
-    {
-      id: 5,
-      item_name: "Tamagoyaki",
-      quantity: 1,
-      pricePerUnit: 16000,
-    },
-    {
-      id: 6,
-      item_name: "Cold Ocha",
-      quantity: 2,
-      pricePerUnit: 16000,
-    },
-  ]);
+  const [billItems, setBillItems] = useState<BillItem[]>(items || []);
   const [editItemId, setEditItemId] = useState<number | null>(null);
   const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
   const [rawPriceMap, setRawPriceMap] = useState<Record<number, string>>({});
 
-  const [taxPercent, setTaxPercent] = useState(11); // default 11%
-  const [servicePercent, setServicePercent] = useState(5); // default 5%
-  const subtotal = items.reduce(
+  const [taxPercent, setTaxPercent] = useState(initialTaxPercent);
+  const [servicePercent, setServicePercent] = useState(initialServicePercent);
+  const subtotal = billItems.reduce(
     (sum, item) => sum + item.pricePerUnit * item.quantity,
     0
   );
   const taxAmount = subtotal * (taxPercent / 100);
   const serviceAmount = subtotal * (servicePercent / 100);
-  const total = subtotal + taxAmount + serviceAmount;
+
+  const [discountUsedType, setDiscountUsedType] = useState<
+    "percent" | "amount"
+  >(discountType);
+  const [discountValue, setDiscountValue] = useState(initialDiscountValue);
+
+  const discountAmount =
+    discountType === "percent"
+      ? subtotal * (discountValue / 100)
+      : discountValue;
+
+  const total = subtotal + taxAmount + serviceAmount - discountAmount;
 
   const updateItem = (
     id: number,
-    field: keyof (typeof items)[0],
+    field: keyof (typeof billItems)[0],
     value: string | number
   ) => {
-    setItems((prev) =>
+    setBillItems((prev) =>
       prev.map((item) =>
         item.id === id
           ? {
@@ -74,7 +62,7 @@ const BillDashboard = () => {
   };
 
   const removeItem = (id: number) => {
-    setItems(items.filter((item) => item.id !== id));
+    setBillItems(billItems.filter((item) => item.id !== id));
   };
 
   const addItem = () => {
@@ -84,18 +72,37 @@ const BillDashboard = () => {
       item_name: "",
       pricePerUnit: 0,
       quantity: 1,
+      assignedTo: [],
     };
-    setItems((prev) => [...prev, newItem]);
+    setBillItems((prev) => [...prev, newItem]);
     setEditItemId(newId);
     setFocusedItemId(newId);
     setRawPriceMap((prev) => ({ ...prev, [newId]: "" }));
+  };
+
+  const handleSaveEdit = () => {
+    if (!items) {
+      toast.error("At least save one item before proceeding.");
+      return;
+    }
+    const tempBillData = {
+      items: billItems,
+      taxPercent,
+      initialServicePercent: servicePercent,
+      discountType: discountUsedType,
+      initialDiscountValue: discountValue,
+      initialSubtotal: subtotal,
+    };
+    navigate("/app/bills/assign/1", {
+      state: { billData: tempBillData, billHeaderData },
+    });
   };
 
   return (
     <>
       {/* Items List */}
       <div className="space-y-3 mb-6 min-h-[45vh]">
-        {items.map((item) => {
+        {billItems.map((item) => {
           const isEditing = editItemId === item.id;
 
           return (
@@ -180,7 +187,7 @@ const BillDashboard = () => {
                       pattern="[0-9]*"
                     />
                   ) : (
-                    <span className="ml-1 text-gray-800 font-semibold underline decoration-dotted decoration-1 cursor-pointer">
+                    <span className="ml-1 text-gray-800 font-semibold  decoration-1 cursor-pointer">
                       {item.pricePerUnit.toLocaleString("id-ID")}
                     </span>
                   )}
@@ -191,7 +198,7 @@ const BillDashboard = () => {
                   {isEditing ? (
                     <button
                       onClick={() => setEditItemId(null)}
-                      className="text-green-600 hover:text-green-800 p-1"
+                      className="text-green-600 cursor-pointer hover:text-green-800 p-1"
                       title="Save"
                     >
                       <Check className="h-6 w-6" />
@@ -199,7 +206,7 @@ const BillDashboard = () => {
                   ) : (
                     <button
                       onClick={() => setEditItemId(item.id)}
-                      className="text-mainBgColor opacity-80 hover:text-mainBgColor hover:opacity-100 p-1"
+                      className="text-mainBgColor opacity-80 hover:text-mainBgColor hover:opacity-100 p-1 cursor-pointer"
                       title="Edit"
                     >
                       <SquarePen className="h-4 w-4" />
@@ -207,7 +214,7 @@ const BillDashboard = () => {
                   )}
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="text-red-500 hover:text-red-700 p-1"
+                    className="text-red-500 cursor-pointer hover:text-red-700 p-1"
                     title="Remove"
                   >
                     <X className="h-4 w-4" />
@@ -218,56 +225,10 @@ const BillDashboard = () => {
           );
         })}
 
-        {/* {items.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-xl p-4 flex items-center justify-between"
-          >
-            <div className="items-center grid grid-cols-8 gap-2 w-fit">
-              <span className="text-gray-600 mr-3 max-w-[30px] col-span-1">
-                {item.quantity}x
-              </span>
-              <span className="font-medium text-gray-900 col-span-3">
-                {item.item_name}
-              </span>
-
-              <div className="flex items-center col-span-2  ">
-                <span className="text-gray-500">Rp&nbsp;</span>
-                <input
-                  type="text"
-                  value={item.pricePerUnit.toLocaleString("id-ID")}
-                  onChange={(e) => {
-                    // Remove non-digit characters
-                    const raw = e.target.value.replace(/[^\d]/g, "");
-                    updateItemPrice(item.id, Number(raw) || 0);
-                  }}
-                  className=" text-left font-semibold text-gray-900 border-0 bg-transparent focus:outline-none"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                />
-              </div>
-              <div className="col-span-2 flex items-center justify-end">
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-mainBgColor opacity-80 hover:text-mainBgColor hover:opacity-100 p-1"
-                >
-                  <SquarePen className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-red-500 hover:text-red-700 p-1"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))} */}
-
         {/* Add Item Button */}
         <button
           onClick={addItem}
-          className="w-full bg-white rounded-xl p-4 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors flex items-center justify-center text-blue-600"
+          className="w-full bg-white rounded-xl p-4 border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors flex items-center justify-center text-blue-600 cursor-pointer"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add Item
@@ -280,12 +241,39 @@ const BillDashboard = () => {
           <div className="grid grid-cols-2  text-gray-600">
             <span>Total item</span>
             <span className="text-end">
-              {items.reduce((sum, i) => sum + i.quantity, 0)}x
+              {billItems.reduce((sum, i) => sum + i.quantity, 0)}x
             </span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Subtotal</span>
             <span>Rp&nbsp;{subtotal.toLocaleString("id-ID")}</span>
+          </div>
+          <div className="grid grid-cols-3 text-gray-600">
+            <span>Discount</span>
+            <div className="flex items-center justify-center gap-1">
+              <select
+                value={discountType}
+                onChange={(e) =>
+                  setDiscountUsedType(e.target.value as "percent" | "amount")
+                }
+                className="text-blue-600 bg-transparent border-b border-blue-300 focus:outline-none text-md"
+              >
+                <option value="percent">%</option>
+                <option value="amount">Rp</option>
+              </select>
+              <input
+                type="number"
+                value={discountValue}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setDiscountValue(value);
+                }}
+                className="text-blue-600 text-center w-[60px] bg-transparent border-b border-blue-300 focus:outline-none"
+              />
+            </div>
+            <span className="text-end text-gray-600">
+              - Rp&nbsp;{discountAmount.toLocaleString("id-ID")}
+            </span>
           </div>
           <div className="grid grid-cols-3 justify-between text-gray-600">
             <span>Tax</span>
@@ -297,7 +285,7 @@ const BillDashboard = () => {
                   const value = Math.min(Number(e.target.value), 100);
                   setTaxPercent(value);
                 }}
-                className="text-blue-600 text-center w-[27px] bg-transparent border-b border-blue-300 focus:outline-none"
+                className="text-blue-600 text-center max-md:w-[27px] w-[30px]  bg-transparent border-b border-blue-300 focus:outline-none"
                 max={100}
               />
               <span>%</span>
@@ -316,7 +304,7 @@ const BillDashboard = () => {
                   const value = Math.min(Number(e.target.value), 100);
                   setServicePercent(value);
                 }}
-                className="text-blue-600 text-center w-[27px] bg-transparent border-b border-blue-300 focus:outline-none"
+                className="text-blue-600 text-center max-md:w-[27px] w-[30px]  bg-transparent border-b border-blue-300 focus:outline-none"
                 max={100}
               />
               <span>%</span>
@@ -336,10 +324,16 @@ const BillDashboard = () => {
 
       {/* Save Button */}
       <button
-        onClick={() => navigate("/app/bills/assign/1")}
-        className="w-full bg-mainBgColor text-white py-4 rounded-2xl font-semibold text-lg"
+        onClick={() => handleSaveEdit()}
+        className="cursor-pointer hover:opacity-90 w-full bg-mainBgColor text-white py-4 rounded-2xl font-semibold text-lg"
       >
         Save Edit
+      </button>
+      <button
+        onClick={() => navigate("/app")}
+        className="cursor-pointer hover:opacity-80 w-full bg-white border-1 border-mainBgColor mt-4 text-mainBgColor py-4 rounded-2xl font-semibold text-lg"
+      >
+        Reset
       </button>
     </>
   );

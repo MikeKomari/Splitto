@@ -1,4 +1,4 @@
-const formatDate = (dateStr: string) => {
+export function formatDate(dateStr: string) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return dateStr;
@@ -6,6 +6,12 @@ const formatDate = (dateStr: string) => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
-};
+}
 
-export default formatDate;
+export function getToday() {
+  return new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
