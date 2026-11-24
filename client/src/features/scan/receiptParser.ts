@@ -22,6 +22,9 @@ export type ParsedReceipt = {
   tax?: number;
   service?: number;
   discount?: number;
+  /** Rates printed on the receipt, e.g. "Service (5,00%)", "PB1 (10%)". */
+  servicePercent?: number;
+  taxPercent?: number;
   /** "Prices are inclusive of tax": tax is not added on top. */
   taxInclusive: boolean;
   check: {
@@ -66,7 +69,7 @@ type SummaryKey = "subtotal" | "total" | "tax" | "service" | "discount";
 const SUMMARY: Array<[SummaryKey, RegExp]> = [
   ["subtotal", /\bs[uwy][bpg]\s*-?\s*tota|\bsub\s*total/i],
   ["service", /\bservice|\bsvc\b|\bserv\b|biaya\s+layanan/i],
-  ["tax", /\bp[abd8]\s?[1il]\b|\bpbi\b|\bpajak|\btax\b|\bppn\b/i],
+  ["tax", /\bp[abd8r]\s?[1il]\b|\bpbi\b|\bpajak|\btax\b|\bppn\b/i],
   ["discount", /\bdisc|diskon|potongan|voucher|promo/i],
   ["total", /grand\s*tota|\btota?l\b|tagihan|jumlah\s+bayar/i],
 ];
@@ -83,11 +86,13 @@ const HEADER_END = /\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\b\d{1,2}:\d{2}\b|\b(kasir|c
 function stripTail(text: string) {
   let t = text;
   for (let i = 0; i < 4; i++) {
-    const next = t.replace(/\s+[^\d\s]{1,4}$/, "");
+    // Crumbs: short non-digit runs, or any single character ("4", "|").
+    const next = t.replace(/\s+(?:[^\d\s]{1,4}|\S)$/, "");
     if (next === t) break;
     t = next;
   }
-  return t;
+  // Only useful if it uncovers a price; otherwise keep real words like "HOT TEA".
+  return /\d{3}\W{0,2}$/.test(t) ? t : text;
 }
 
 type Line = { text: string; core: string; amount: number | null };
@@ -99,6 +104,44 @@ function nameText(line: Line) {
 
 function letters(s: string) {
   return (s.match(/[A-Za-z]/g) ?? []).length;
+}
+
+const SERVICE_RATES = [0, 5, 6, 7, 8, 10, 12, 15];
+const TAX_RATES = [0, 10, 11, 12];
+
+/**
+ * Service or tax line unreadable, but subtotal and total are fine: find the
+ * one common rate pair that reproduces the printed total exactly (same
+ * rounding as split.ts). If zero or several pairs fit, leave it to the user.
+ */
+function inferRates(
+  summary: Partial<Record<SummaryKey, number>>,
+  percents: Partial<Record<"service" | "tax", number>>
+) {
+  if (summary.subtotal === undefined || summary.total === undefined) return;
+  if (percents.service !== undefined && percents.tax !== undefined) return;
+  const base = summary.subtotal - (summary.discount ?? 0);
+  if (base <= 0 || summary.total <= base) return;
+  const fits: Array<[number, number, number, number]> = [];
+  for (const sp of percents.service !== undefined ? [percents.service] : SERVICE_RATES)
+    for (const tp of percents.tax !== undefined ? [percents.tax] : TAX_RATES) {
+      const svc = Math.round((base * sp) / 100);
+      const tax = Math.round(((base + svc) * tp) / 100);
+      if (Math.abs(base + svc + tax - summary.total) <= 1) fits.push([sp, tp, svc, tax]);
+    }
+  if (fits.length !== 1) return;
+  const [sp, tp, svc, tax] = fits[0];
+  percents.service = sp;
+  percents.tax = tp;
+  summary.service = svc;
+  summary.tax = tax;
+}
+
+/** A line that is just prices: "@18.000   18.000" (OCR crumbs allowed). */
+function isPriceOnly(line: Line) {
+  if (line.amount === null || line.amount <= 0) return false;
+  const withoutAmounts = line.core.replace(AMOUNT_ALL(), " ").replace(/@/g, " ");
+  return letters(withoutAmounts) <= 2 && !qtyLine(line.core);
 }
 
 function isSummary(text: string) {
@@ -148,6 +191,13 @@ function resolveQty(qtyRaw: number | null, unit: number | null, total: number) {
   if (unit && unit > 0) {
     const q = total / unit;
     if (Number.isInteger(q) && q >= 1 && q <= 99) return { quantity: q, unitPrice: unit };
+    // "@18.000" read as "418.000": drop the leading digit and try again.
+    const digits = String(unit).length;
+    if (digits >= 5) {
+      const u = unit % 10 ** (digits - 1);
+      const q2 = u > 0 ? total / u : 0;
+      if (Number.isInteger(q2) && q2 >= 1 && q2 <= 99) return { quantity: q2, unitPrice: u };
+    }
   }
   const quantity = qtyRaw && qtyRaw >= 1 && qtyRaw <= 99 ? qtyRaw : 1;
   const unitPrice = total / quantity;
@@ -189,9 +239,22 @@ export function parseReceipt(text: string): ParsedReceipt {
 
   // --- Summary values -----------------------------------------------------
   const summary: Partial<Record<SummaryKey, number>> = {};
+  const percents: Partial<Record<"service" | "tax", number>> = {};
+  let paid: number | undefined;
   let negatives = 0;
   for (let i = itemsStart; i < lines.length; i++) {
     const { core: t, amount } = lines[i];
+    // Rates are read even when the amount on the line is unreadable.
+    if (i >= summaryStart && !/inclusive|termasuk|dpp/i.test(t)) {
+      for (const key of ["service", "tax"] as const) {
+        if (!SUMMARY.find(([k]) => k === key)![1].test(t)) continue;
+        // "(5,00%)", "10%", and OCR's "(5,008)" where % became 8.
+        const pm = t.match(/\(\s*(\d{1,2})(?=\s*(?:[.,%8)]|$))|\b(\d{1,2})(?:[.,]\d{1,2})?\s*%/);
+        const pct = pm ? Number(pm[1] ?? pm[2]) : NaN;
+        if (pct > 0 && pct <= 25) percents[key] ??= pct;
+        break;
+      }
+    }
     if (amount === null) continue;
     if (/inclusive|termasuk|dpp/i.test(t)) {
       taxInclusive = true;
@@ -202,6 +265,10 @@ export function parseReceipt(text: string): ParsedReceipt {
       continue;
     }
     if (i < summaryStart || CATEGORY_TOTAL.test(t)) continue;
+    if (/\b(qris|debit|card|edc|paid|ovo|gopay|dana|shopee\s?pay)\b/i.test(t)) {
+      paid ??= amount;
+      continue;
+    }
     for (const [key, re] of SUMMARY) {
       if (!re.test(t)) continue;
       if (key === "total") summary.total = Math.max(summary.total ?? 0, amount);
@@ -210,6 +277,21 @@ export function parseReceipt(text: string): ParsedReceipt {
     }
   }
   if (negatives > 0) summary.discount = (summary.discount ?? 0) + negatives;
+  // An OCR-mangled amount ("10.100" read as "2-100") loses to the printed rate.
+  if (summary.subtotal !== undefined) {
+    const base = summary.subtotal - (summary.discount ?? 0);
+    if (percents.service !== undefined) {
+      const expected = Math.round((base * percents.service) / 100);
+      if (summary.service === undefined || Math.abs(summary.service - expected) > expected * 0.02) summary.service = expected;
+    }
+    if (percents.tax !== undefined) {
+      const expected = Math.round(((base + (summary.service ?? 0)) * percents.tax) / 100);
+      if (summary.tax === undefined || Math.abs(summary.tax - expected) > expected * 0.02) summary.tax = expected;
+    }
+  }
+  // "TOTAL" unreadable but "Paid QRIS 233.310" is fine: that is the total.
+  if (summary.total === undefined && paid !== undefined) summary.total = paid;
+  inferRates(summary, percents);
 
   // --- Items ----------------------------------------------------------------
   const body = lines.slice(itemsStart, summaryStart);
@@ -230,6 +312,37 @@ export function parseReceipt(text: string): ParsedReceipt {
       items.push({ name: name || "Item", ...resolveQty(q.qty, q.unit, q.total) });
       return;
     }
+    // Layout E: "1 SMOKED RICE" then "@18.000   18.000" on the next line,
+    // possibly with "+Extra sauce" modifier lines around it.
+    if (isPriceOnly(line)) {
+      const amounts = [...line.core.matchAll(AMOUNT_ALL())]
+        .map((a) => parseAmount(a[0]))
+        .filter((v): v is number => v !== null && v > 0);
+      const total = amounts[amounts.length - 1];
+      if (!total || total < MIN_ITEM) return;
+      const unit = amounts.length > 1 ? amounts[amounts.length - 2] : null;
+      let nameLine: Line | null = null;
+      for (let k = i - 1; k >= Math.max(0, i - 4); k--) {
+        const cand = body[k];
+        if (isPriceOnly(cand) || cand.amount !== null || qtyLine(cand.core)) break;
+        if (/^\W*\+/.test(cand.text)) continue;
+        if (isNameLike(cand) || /^\W*\d{1,2}\s+[A-Za-z]/.test(cand.core)) {
+          nameLine = cand;
+          break;
+        }
+      }
+      let qty: number | null = null;
+      let name = "Item";
+      if (nameLine) {
+        const raw = nameText(nameLine).replace(/^[^A-Za-z0-9]+/, "");
+        const lead = raw.match(/^(\d{1,2})\s+(?=[A-Za-z])/);
+        if (lead) qty = Number(lead[1]);
+        name = cleanName(lead ? raw.slice(lead[0].length) : raw) || "Item";
+      }
+      items.push({ name, ...resolveQty(qty, unit, total) });
+      return;
+    }
+
     // Layouts B/C/D: one line per item.
     const { core: t, amount } = line;
     if (amount === null || amount < MIN_ITEM) return;
@@ -275,34 +388,46 @@ export function parseReceipt(text: string): ParsedReceipt {
     items.push({ name, ...resolveQty(qty, unit, amount) });
   });
 
-  // --- Reconciliation -------------------------------------------------------
-  const itemsSum = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
-  const afterDiscount = itemsSum - (summary.discount ?? 0);
-  let check: ParsedReceipt["check"] = { itemsSum, matches: false };
-  if (summary.subtotal !== undefined) {
-    check = {
-      itemsSum,
-      against: "subtotal",
-      expected: summary.subtotal,
-      matches: itemsSum === summary.subtotal || afterDiscount === summary.subtotal,
-    };
-  }
-  if (!check.matches && summary.total !== undefined) {
-    const ok = itemsSum === summary.total || afterDiscount === summary.total;
-    if (ok || summary.subtotal === undefined)
-      check = { itemsSum, against: "total", expected: summary.total, matches: ok };
-  }
-  // Items already add up to the final total → tax is informational only.
-  if (summary.total !== undefined && (itemsSum === summary.total || afterDiscount === summary.total))
-    taxInclusive = true;
-
-  return {
+  return reconcile({
     items,
     subtotal: summary.subtotal,
     total: summary.total,
-    tax: taxInclusive ? undefined : summary.tax,
+    tax: summary.tax,
     service: summary.service,
     discount: summary.discount,
+    taxInclusive,
+    servicePercent: percents.service,
+    taxPercent: percents.tax,
+  });
+}
+
+/**
+ * Do the items add up to what the receipt printed? Shared by the OCR parser
+ * and the LLM scan, so both are judged by the same rule.
+ */
+export function reconcile(r: Omit<ParsedReceipt, "check">): ParsedReceipt {
+  const itemsSum = r.items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
+  const afterDiscount = itemsSum - (r.discount ?? 0);
+  let taxInclusive = r.taxInclusive;
+  let check: ParsedReceipt["check"] = { itemsSum, matches: false };
+  if (r.subtotal !== undefined) {
+    check = {
+      itemsSum,
+      against: "subtotal",
+      expected: r.subtotal,
+      matches: itemsSum === r.subtotal || afterDiscount === r.subtotal,
+    };
+  }
+  if (!check.matches && r.total !== undefined) {
+    const ok = itemsSum === r.total || afterDiscount === r.total;
+    if (ok || r.subtotal === undefined) check = { itemsSum, against: "total", expected: r.total, matches: ok };
+  }
+  // Items already add up to the final total → tax is informational only.
+  if (r.total !== undefined && (itemsSum === r.total || afterDiscount === r.total)) taxInclusive = true;
+  return {
+    ...r,
+    tax: taxInclusive ? undefined : r.tax,
+    taxPercent: taxInclusive ? undefined : r.taxPercent,
     taxInclusive,
     check,
   };

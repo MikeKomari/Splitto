@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { AlertTriangle, ArrowLeft, CheckCircle2, ImageUp, PenLine, RefreshCcw, Sparkles, SwitchCamera, Zap, ZapOff } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, ImageUp, PenLine, RefreshCcw, SwitchCamera, Zap, ZapOff } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Money } from "@/components/ui/AnimatedNumber";
 import { preloadOcr, recognizeReceipt, type OcrProgress } from "@/features/scan/ocr/ocrEngine";
 import { parseReceipt, type ParsedReceipt } from "@/features/scan/receiptParser";
 import { receiptToBill } from "@/features/scan/toBill";
-import { aiScan, aiScanEnabled } from "@/features/scan/aiScan";
+import { better, getScanConfig, llmScan, LlmScanError } from "@/features/scan/llmScan";
 import { useDraft } from "@/store/draftStore";
 import { useStartManual } from "@/features/bill/useStartManual";
 import { formatRupiah } from "@/lib/money";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/cn";
 type Phase =
   | { kind: "camera" }
   | { kind: "reading"; progress: OcrProgress | null; via: "ocr" | "ai" }
-  | { kind: "done"; result: ParsedReceipt; via: "ocr" | "ai" }
+  | { kind: "done"; result: ParsedReceipt; via: "ocr" | "ai"; note?: string }
   | { kind: "failed"; message: string };
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
@@ -86,35 +86,71 @@ export default function Scan() {
     }
   };
 
-  const process = async (blob: Blob, via: "ocr" | "ai") => {
+  /**
+   * Free OCR first. If the server has an LLM configured (SCAN_MODE=auto) and
+   * the OCR items don't add up to the receipt, ask the LLM and keep the better
+   * read. SCAN_MODE=llm skips OCR. Any LLM failure falls back to OCR.
+   */
+  const process = async (blob: Blob) => {
     const id = ++runId.current;
-    setPhase({ kind: "reading", progress: null, via });
+    const live = () => id === runId.current;
+    const cfg = await getScanConfig();
+    const viaAi = async () => {
+      setPhase({ kind: "reading", progress: null, via: "ai" });
+      return llmScan(blob);
+    };
+    const viaOcr = async () => {
+      setPhase({ kind: "reading", progress: null, via: "ocr" });
+      const { text } = await recognizeReceipt(blob, (p) => live() && setPhase({ kind: "reading", progress: p, via: "ocr" }));
+      return parseReceipt(text);
+    };
+    const aiError = (e: unknown) =>
+      e instanceof LlmScanError && e.status === 429 ? "AI scan limit reached, showing the on-device result." : "AI scan unavailable, showing the on-device result.";
+
     try {
-      const result =
-        via === "ai"
-          ? await aiScan(blob)
-          : parseReceipt((await recognizeReceipt(blob, (p) => id === runId.current && setPhase({ kind: "reading", progress: p, via }))).text);
-      if (id !== runId.current) return;
+      let result: ParsedReceipt;
+      let via: "ocr" | "ai" = "ocr";
+      let note: string | undefined;
+      if (cfg.llm && cfg.mode === "llm") {
+        try {
+          result = await viaAi();
+          via = "ai";
+        } catch (e) {
+          if (!live()) return;
+          note = aiError(e);
+          result = await viaOcr();
+        }
+      } else {
+        result = await viaOcr();
+        if (live() && cfg.llm && cfg.mode === "auto" && !result.check.matches) {
+          try {
+            const ai = await viaAi();
+            const pick = better(result, ai);
+            if (pick === ai) via = "ai";
+            result = pick;
+          } catch (e) {
+            note = aiError(e);
+          }
+        }
+      }
+      if (!live()) return;
       if (result.items.length === 0) {
         setPhase({ kind: "failed", message: "We couldn't find any items on this photo." });
         return;
       }
-      if (navigator.vibrate) navigator.vibrate(12);
-      setPhase({ kind: "done", result, via });
+      navigator.vibrate?.(12);
+      setPhase({ kind: "done", result, via, note });
     } catch (e) {
-      if (id !== runId.current) return;
+      if (!live()) return;
       console.error(e);
-      setPhase({
-        kind: "failed",
-        message: via === "ai" ? "AI scan is unavailable right now." : "Reading the receipt failed. Check your connection for the first scan, then try again.",
-      });
+      setPhase({ kind: "failed", message: "Reading the receipt failed. Check your connection for the first scan, then try again." });
     }
   };
 
   const handlePhoto = (blob: Blob) => {
     stopCamera();
     setPhoto({ blob, url: URL.createObjectURL(blob) });
-    void process(blob, "ocr");
+    void process(blob);
   };
 
   const capture = () => {
@@ -197,7 +233,7 @@ export default function Scan() {
         <IconButton label="Close scanner" onClick={() => navigate("/app")} className="text-star-white hover:bg-white/10">
           <ArrowLeft className="h-5 w-5" />
         </IconButton>
-        <span className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold">On-device scan · free</span>
+        <span className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold">Receipt scanner</span>
         {!photo && !cameraError ? (
           <IconButton label="Switch camera" onClick={() => setFacing((f) => (f === "user" ? "environment" : "user"))} className="text-star-white hover:bg-white/10">
             <SwitchCamera className="h-5 w-5" />
@@ -217,8 +253,8 @@ export default function Scan() {
                 <circle cx="24" cy="24" r="20" fill="none" stroke="#A283E6" strokeWidth="4" strokeLinecap="round" strokeDasharray={125.6} strokeDashoffset={125.6 * (1 - (phase.via === "ai" ? 0.5 : pct / 100))} className="transition-[stroke-dashoffset] duration-300" />
               </svg>
               <div aria-live="polite">
-                <p className="font-semibold">{phase.via === "ai" ? "Asking the AI scanner…" : phase.progress?.stage === "reading" ? "Reading items…" : "Getting the scanner ready…"}</p>
-                <p className="text-[12px] text-star-silver">{phase.via === "ai" ? "This uses the paid fallback" : `${pct}% · stays on your phone`}</p>
+                <p className="font-semibold">{phase.via === "ai" ? "Reading with AI…" : phase.progress?.stage === "reading" ? "Reading items…" : "Getting the scanner ready…"}</p>
+                <p className="text-[12px] text-star-silver">{phase.via === "ai" ? "Double-checking with AI" : `${pct}% · stays on your phone`}</p>
               </div>
             </div>
           </div>
@@ -255,7 +291,7 @@ export default function Scan() {
         <div className="animate-sheet-up safe-bottom absolute inset-x-0 bottom-0 rounded-t-[28px] bg-surface px-5 pt-5 text-text shadow-pop">
           <div className="mx-auto max-w-md">
             {phase.kind === "done" ? (
-              <ResultSummary result={phase.result} />
+              <ResultSummary result={phase.result} via={phase.via} note={phase.note} />
             ) : (
               <div className="animate-shake text-center">
                 <AlertTriangle className="mx-auto h-8 w-8 text-warning" />
@@ -278,11 +314,6 @@ export default function Scan() {
                 </Button>
               )}
             </div>
-            {aiScanEnabled && photo && (phase.kind === "failed" || (phase.kind === "done" && !phase.result.check.matches && phase.via === "ocr")) && (
-              <Button variant="ghost" block className="mt-2" onClick={() => process(photo.blob, "ai")}>
-                <Sparkles className="h-4 w-4" /> Try AI scan instead
-              </Button>
-            )}
             <div className="h-2" />
           </div>
         </div>
@@ -293,13 +324,13 @@ export default function Scan() {
   );
 }
 
-function ResultSummary({ result }: { result: ParsedReceipt }) {
+function ResultSummary({ result, via, note }: { result: ParsedReceipt; via: "ocr" | "ai"; note?: string }) {
   const { check } = result;
   const count = result.items.reduce((n, i) => n + i.quantity, 0);
   return (
     <div className="text-center">
       <p className="text-[13px] text-muted">
-        Found {result.items.length} lines · {count} items
+        Found {result.items.length} lines · {count} items{via === "ai" && " · read by AI"}
       </p>
       <p className="mt-1 font-display text-[32px] font-semibold leading-10">
         <Money value={result.total ?? check.itemsSum} />
@@ -316,6 +347,7 @@ function ResultSummary({ result }: { result: ParsedReceipt }) {
             : "Couldn't find the receipt total: please check items"}
         </p>
       )}
+      {note && <p className="mt-2 text-[12px] text-muted">{note}</p>}
     </div>
   );
 }

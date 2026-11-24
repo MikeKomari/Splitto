@@ -119,8 +119,10 @@ Code is in `client/src/features/bill/split.ts`, with tests in `split.test.ts`.
 
 **Decision:**
 
-- Scanning now uses **Tesseract (WebAssembly) running on the phone**, followed by a deterministic receipt parser.
-- The old GPT-4o-mini endpoint is kept as an **optional fallback**. It is off by default (`VITE_AI_SCAN=true` turns it on). It is only offered when the free scan could not reconcile the receipt.
+- Scanning uses **Tesseract (WebAssembly) running on the phone**, followed by a deterministic receipt parser.
+- An **optional AI scan** runs in a Vercel function (`client/api/scan.ts`). It works with any OpenAI-compatible vision model, and Nous Portal is the default. It is configured only with environment variables: `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `SCAN_MODE`, `SCAN_RATE_LIMIT`.
+- With the default `SCAN_MODE=auto`, the AI runs only when the on-device result doesn't add up to the receipt, so you pay only for the hard receipts.
+- When the service or tax line is unreadable but the subtotal and total are clear, the parser finds the one common rate pair (for example 5% service and 10% PB1) that reproduces the printed total exactly.
 
 ```plantuml
 @startuml
@@ -128,7 +130,7 @@ actor User
 participant "Scan screen" as UI
 participant "Tesseract (in browser)" as OCR
 participant "receiptParser" as P
-participant "LLM endpoint\n(optional)" as AI
+participant "/api/scan → LLM\n(optional)" as AI
 User -> UI : photo / upload
 UI -> OCR : clean-up (grayscale + adaptive threshold), recognise
 OCR --> UI : text + confidence
@@ -141,8 +143,9 @@ alt items match printed subtotal/total
   UI -> User : "Items match the receipt" → Review
 else mismatch or nothing found
   UI -> User : "Check items" → Review / Retake / Type it in
-  opt VITE_AI_SCAN=true
-    User -> AI : "Try AI scan instead" (paid, only now)
+  opt LLM_API_KEY set and SCAN_MODE=auto
+    UI -> AI : POST /api/scan (photo shrunk to 1600px)
+    AI --> UI : validated items; keep whichever read reconciles
   end
 end
 @enduml

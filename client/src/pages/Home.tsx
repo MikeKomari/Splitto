@@ -1,10 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ArrowRight, Plus, ReceiptText, ScanLine } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { NanashiMark } from "@/components/layout/NanashiMark";
 import { useDraft } from "@/store/draftStore";
-import { useHistory } from "@/store/historyStore";
+import { useHistory, usePrefs } from "@/store/historyStore";
 import { computeSplit } from "@/features/bill/split";
 import { formatRupiah } from "@/lib/money";
 import { formatDate } from "@/lib/date";
@@ -24,7 +24,10 @@ export default function Home() {
   const bills = useHistory((s) => s.bills);
   const friends = useHistory((s) => s.friends);
   const startManual = useStartManual();
+  const onboarded = usePrefs((s) => s.onboarded);
   const draftTotal = draft ? computeSplit(draft).grandTotal : 0;
+
+  if (!onboarded) return <Navigate to="/welcome" replace />;
 
   return (
     <>

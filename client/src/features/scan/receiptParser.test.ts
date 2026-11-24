@@ -83,6 +83,26 @@ describe("parseReceipt on real OCR output", () => {
     for (const f of ["IMG_0669", "IMG_0671"]) expect(parseReceipt(fixture(f)).check.matches).toBe(true);
   });
 
+  it("frango: name line, then '@price total' line, modifiers and mangled PB1", () => {
+    const r = parseReceipt(fixture("frango"));
+    expect(r.items.slice(1)).toEqual([
+      { name: "SMOKED RICE", quantity: 1, unitPrice: 18000 },
+      { name: "PERI SPICED FRIES", quantity: 1, unitPrice: 20000 },
+      { name: "CREAMY TOMATO FUSILLI", quantity: 1, unitPrice: 57000 },
+      { name: "HOT TEA", quantity: 1, unitPrice: 18000 },
+    ]);
+    expect(r.items[0].unitPrice).toBe(89000);
+    expect(r).toMatchObject({ subtotal: 202000, servicePercent: 5, taxPercent: 10, service: 10100, tax: 21210 });
+    expect(r.check.matches).toBe(true);
+  });
+
+  it("frango (browser OCR): service line unreadable, rates inferred from subtotal → total", () => {
+    const r = parseReceipt(fixture("frango-browser"));
+    expect(r.items.map((i) => i.unitPrice)).toEqual([89000, 18000, 20000, 57000, 18000]);
+    expect(r).toMatchObject({ subtotal: 202000, total: 233310, servicePercent: 5, taxPercent: 10, service: 10100, tax: 21210 });
+    expect(r.check.matches).toBe(true);
+  });
+
   it("flags receipts it could not fully read instead of pretending", () => {
     const r = parseReceipt(fixture("IMG_0663"));
     expect(r.check.matches).toBe(false);

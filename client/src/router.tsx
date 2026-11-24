@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { createBrowserRouter, createMemoryRouter, Navigate, type RouteObject } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import Onboarding from "@/pages/Onboarding";
+import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 
@@ -24,7 +25,8 @@ const Loading = () => (
 const s = (el: ReactNode) => <Suspense fallback={<Loading />}>{el}</Suspense>;
 
 const routes: RouteObject[] = [
-  { path: "/", element: <Onboarding /> },
+  { path: "/", element: <Landing /> },
+  { path: "/welcome", element: <Onboarding /> },
   {
     path: "/app",
     element: <AppShell />,
@@ -41,6 +43,7 @@ const routes: RouteObject[] = [
   { path: "/history/:id", element: s(<HistoryDetail />) },
   // Old URLs from the previous version
   { path: "/landingpage", element: <Navigate to="/" replace /> },
+  { path: "/onboarding", element: <Navigate to="/welcome" replace /> },
   { path: "/app/camera", element: <Navigate to="/scan" replace /> },
   { path: "*", element: <NotFound /> },
 ];

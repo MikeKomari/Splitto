@@ -23,8 +23,9 @@ export function receiptToBill(r: ParsedReceipt, people: Bill["people"] = []): Bi
     items: r.items.map((it) => ({ id: newId(), ...it, assignees: [] })),
     charges: {
       discount: { type: "amount", value: discount },
-      servicePercent: base > 0 ? round1((service / base) * 100) : 0,
-      taxPercent: base + service > 0 ? round1((tax / (base + service)) * 100) : 0,
+      // Prefer the rate printed on the receipt; derive it from amounts otherwise.
+      servicePercent: r.servicePercent ?? (base > 0 ? round1((service / base) * 100) : 0),
+      taxPercent: r.taxInclusive ? 0 : (r.taxPercent ?? (base + service > 0 ? round1((tax / (base + service)) * 100) : 0)),
     },
   });
 }
