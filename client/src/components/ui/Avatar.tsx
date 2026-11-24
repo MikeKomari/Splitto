@@ -1,10 +1,10 @@
 import { cn } from "@/lib/cn";
 
-export const AVATAR_COUNT = 74;
+export const AVATAR_COUNT = 68;
 const tiles = ["bg-[var(--tile-1)]", "bg-[var(--tile-2)]", "bg-[var(--tile-3)]", "bg-[var(--tile-4)]", "bg-[var(--tile-5)]"];
 
 export function avatarSrc(n: number) {
-  return `/profile/profile1/${((n % AVATAR_COUNT) + AVATAR_COUNT) % AVATAR_COUNT}.png`;
+  return `${import.meta.env.BASE_URL}profile/profile1/${((n % AVATAR_COUNT) + AVATAR_COUNT) % AVATAR_COUNT}.png`;
 }
 
 type Props = {

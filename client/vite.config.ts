@@ -6,11 +6,13 @@ import { VitePWA } from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // "artifact": sandboxed claude.ai preview. Relative paths, no service worker.
+  base: mode === "artifact" ? "./" : "/",
   plugins: [
     tailwindcss(),
     react(),
-    VitePWA({
+    mode !== "artifact" && VitePWA({
       registerType: "autoUpdate",
       workbox: {
         globPatterns: ["**/*.{js,css,html,woff2,png,svg}"],
@@ -54,4 +56,4 @@ export default defineConfig({
     environment: "node",
     include: ["src/**/*.test.ts"],
   },
-});
+}));

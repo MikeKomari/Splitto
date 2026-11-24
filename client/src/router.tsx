@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, createMemoryRouter, Navigate, type RouteObject } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import Onboarding from "@/pages/Onboarding";
 import Home from "@/pages/Home";
@@ -23,7 +23,7 @@ const Loading = () => (
 );
 const s = (el: ReactNode) => <Suspense fallback={<Loading />}>{el}</Suspense>;
 
-export const router = createBrowserRouter([
+const routes: RouteObject[] = [
   { path: "/", element: <Onboarding /> },
   {
     path: "/app",
@@ -43,4 +43,7 @@ export const router = createBrowserRouter([
   { path: "/landingpage", element: <Navigate to="/" replace /> },
   { path: "/app/camera", element: <Navigate to="/scan" replace /> },
   { path: "*", element: <NotFound /> },
-]);
+];
+
+// The claude.ai preview build runs in a sandboxed frame without real URLs.
+export const router = import.meta.env.VITE_ROUTER === "memory" ? createMemoryRouter(routes) : createBrowserRouter(routes);

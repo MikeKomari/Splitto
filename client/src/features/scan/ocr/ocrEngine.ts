@@ -14,13 +14,33 @@ export type OcrResult = { text: string; confidence: number; rotation: 0 | 90 | 2
 const RETRY_BELOW = 55;
 
 let workerPromise: Promise<Worker> | null = null;
+
+/**
+ * Normally the worker script is loaded straight from /ocr. Hosts that refuse
+ * to serve ".gz" files (the claude.ai preview) set VITE_OCR_MODEL_EXT, and the
+ * model is published with that extra extension; a tiny wrapper worker
+ * rewrites that single fetch.
+ */
+function workerSource(base: string) {
+  const ext = import.meta.env.VITE_OCR_MODEL_EXT;
+  if (!ext) return { workerPath: `${base}/ocr/worker.min.js` };
+  const shim =
+    `const f=self.fetch.bind(self);` +
+    `self.fetch=(u,o)=>f(String(u).endsWith(".traineddata.gz")?String(u)+${JSON.stringify(ext)}:u,o);` +
+    `importScripts(${JSON.stringify(`${base}/ocr/worker.min.js`)});`;
+  return {
+    workerPath: URL.createObjectURL(new Blob([shim], { type: "text/javascript" })),
+    workerBlobURL: false,
+  };
+}
 let onProgress: ((p: OcrProgress) => void) | null = null;
 
 function getWorker() {
   if (!workerPromise) {
-    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    // Absolute URLs: the worker resolves relative paths against its own URL.
+    const base = new URL(import.meta.env.BASE_URL, document.baseURI).href.replace(/\/$/, "");
     workerPromise = createWorker("eng", 1, {
-      workerPath: `${base}/ocr/worker.min.js`,
+      ...workerSource(base),
       corePath: `${base}/ocr/core`,
       langPath: `${base}/ocr/lang`,
       logger: (m) => {

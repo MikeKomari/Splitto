@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,6 +12,12 @@ export default function HistoryDetail() {
   const navigate = useNavigate();
   const bill = useHistory((s) => s.bills.find((b) => b.id === id));
   const removeBill = useHistory((s) => s.removeBill);
+  const [arming, setArming] = useState(false);
+  useEffect(() => {
+    if (!arming) return;
+    const t = setTimeout(() => setArming(false), 3000);
+    return () => clearTimeout(t);
+  }, [arming]);
   if (!bill) return <NotFound />;
   return (
     <div className="mx-auto min-h-dvh max-w-md px-4 pb-12">
@@ -19,18 +26,22 @@ export default function HistoryDetail() {
           <ArrowLeft className="h-5 w-5" />
         </IconButton>
         <h1 className="text-[17px] leading-6">Bill</h1>
-        <IconButton
-          label="Delete bill"
-          className="-mr-2 text-muted hover:text-danger"
-          onClick={() => {
-            if (!confirm("Delete this bill from your history?")) return;
-            removeBill(bill.id);
-            toast("Bill deleted");
-            navigate("/app/activity", { replace: true });
-          }}
-        >
-          <Trash2 className="h-5 w-5" />
-        </IconButton>
+        {arming ? (
+          <button
+            onClick={() => {
+              removeBill(bill.id);
+              toast("Bill deleted");
+              navigate("/app/activity", { replace: true });
+            }}
+            className="animate-pop-in -mr-1 h-9 rounded-full bg-danger px-3 text-[13px] font-semibold text-white cursor-pointer"
+          >
+            Tap to delete
+          </button>
+        ) : (
+          <IconButton label="Delete bill" className="-mr-2 text-muted hover:text-danger" onClick={() => setArming(true)}>
+            <Trash2 className="h-5 w-5" />
+          </IconButton>
+        )}
       </header>
       <div className="animate-page-in">
         <SplitSummary bill={bill} />
