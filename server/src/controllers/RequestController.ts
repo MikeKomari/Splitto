@@ -43,7 +43,8 @@ export const RequestSplitBill: RequestHandler[] = [
       }
       const imageBuffer = await fs.readFile(file.path);
       const base64Image = imageBuffer.toString("base64");
-      const imageDataUrl = `data:image/${file.mimetype};base64,${base64Image}`;
+      // mimetype is already "image/jpeg"; the old code produced "data:image/image/jpeg".
+      const imageDataUrl = `data:${file.mimetype};base64,${base64Image}`;
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -88,7 +89,8 @@ export const RequestSplitBill: RequestHandler[] = [
             ],
           },
         ],
-        temperature: 1,
+        // Extraction, not creativity: deterministic output parses reliably.
+        temperature: 0,
         max_tokens: 2048,
         top_p: 1,
       });
@@ -97,11 +99,13 @@ export const RequestSplitBill: RequestHandler[] = [
         res.status(400).json({ message: "No data returned from OpenAI" });
         return;
       }
-      await fs.unlink(file.path);
-      res.json(JSON.parse(data));
+      res.json(JSON.parse(data.replace(/^```(?:json)?\s*|\s*```$/g, "")));
     } catch (e) {
       console.error("Error in RequestSplitBill:", e);
       res.status(500).json({ error: "Internal Server Error" });
+    } finally {
+      // Receipt photos are personal data: never leave them on disk.
+      if (req.file?.path) await fs.unlink(req.file.path).catch(() => undefined);
     }
   },
 ];

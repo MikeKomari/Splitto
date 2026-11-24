@@ -1,25 +1,286 @@
 @import "tailwindcss";
 
-@theme {
-  --color-mainBgColor: #301934;
-  --color-mainContrastColor: #f3f4f6;
+/*
+ * Splitto design tokens = Nanashi design system (product base, accent: violet).
+ * Source of truth for values: the Nanashi design system artifact. See design.md.
+ * Components use only these semantic tokens, never raw hex or Tailwind palette
+ * colors, so light/dark and a future accent swap are a one-file change.
+ */
 
-  --color-white: #ffffff;
-  --color-black: #000000;
+:root {
+  /* Moon neutrals (~80% of a screen) */
+  --bg: #fbfafd;
+  --surface: #ffffff;
+  --surface-raised: #f6f5f9;
+  --border: #e0dde8;
+  --border-strong: #7b768c;
+  --text: #1f1a2b;
+  --text-muted: #5d5870;
 
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
+  /* Product accent: Nanashi Violet (~15%) */
+  --primary: #6a3bc6;
+  --primary-hover: #5729a6;
+  --on-primary: #ffffff;
+  --primary-subtle: #ede7fb;
+  --primary-subtle-text: #5729a6;
+  --focus-ring: #8257d8;
 
-  --color-blue-300: #93c5fd;
-  --color-blue-600: #155dfc;
+  /* Star Gold (≤5%): one highlight per screen */
+  --star: #ffc857;
+  --on-star: #2e1458;
+  --star-text: #9a6206;
+  --gold-100: #fff4d6;
 
-  --color-red-400: #f87171;
+  /* Status */
+  --success: #177a55;
+  --warning: #b4530f;
+  --danger: #c8384f;
+  --info: #2f6fd6;
+
+  /* Brand moments */
+  --night: #0f0d14;
+  --star-white: #f8f9fa;
+  --star-silver: #d1d5db;
+
+  /* Sibling-accent tints, used only as avatar tile backgrounds */
+  --tile-1: #ede7fb;
+  --tile-2: #fff4d6;
+  --tile-3: #ddf5f1;
+  --tile-4: #e0f0fa;
+  --tile-5: #fce7f1;
+
+  /* Chart */
+  --chart-bar: #ddd2f7;
+
+  --shadow-pop: 0 8px 24px rgba(46, 20, 88, 0.12);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0d14;
+    --surface: #18161f;
+    --surface-raised: #221f2d;
+    --border: #2d2a3a;
+    --border-strong: #7b768c;
+    --text: #eeecf3;
+    --text-muted: #a29db2;
+
+    --primary: #a283e6;
+    --primary-hover: #b79cf0;
+    --on-primary: #0f0d14;
+    --primary-subtle: #271d3f;
+    --primary-subtle-text: #c9b6f5;
+    --focus-ring: #b79cf0;
+
+    --star-text: #ffc857;
+    --gold-100: #3a2f14;
+
+    --success: #3eb489;
+    --warning: #f5a65b;
+    --danger: #f07a8c;
+    --info: #7aa7f2;
+
+    --tile-1: #271d3f;
+    --tile-2: #3a2f14;
+    --tile-3: #10302d;
+    --tile-4: #0e2a3d;
+    --tile-5: #3a1426;
+
+    --chart-bar: #2d2a3a;
+
+    --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-subtle-text: var(--primary-subtle-text);
+  --color-focus: var(--focus-ring);
+  --color-star: var(--star);
+  --color-on-star: var(--on-star);
+  --color-star-text: var(--star-text);
+  --color-gold-100: var(--gold-100);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-night: var(--night);
+  --color-star-white: var(--star-white);
+  --color-star-silver: var(--star-silver);
+  --color-chart-bar: var(--chart-bar);
+
+  --font-display: "Sora", "Plus Jakarta Sans Variable", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-pop: var(--shadow-pop);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@layer base {
+  html {
+    /* Keep focused/scrolled-to elements clear of the sticky header and CTA. */
+    scroll-padding-top: 140px;
+    scroll-padding-bottom: 170px;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 24px;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Micro-animations. Short (120–420ms), ease-out, never block input.   */
+/* All are disabled by prefers-reduced-motion at the bottom.           */
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { opacity: 1; transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@keyframes scan-sweep {
+  0% { top: 4%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 96%; opacity: 0; }
+}
+@keyframes bracket-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+@keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+@keyframes orbit { to { transform: rotate(360deg); } }
+
+@utility animate-page-in { animation: page-in 320ms var(--ease-out-soft) both; }
+@utility animate-rise-in {
+  animation: rise-in 420ms var(--ease-out-soft) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+@utility animate-pop-in { animation: pop-in 360ms var(--ease-spring) both; }
+@utility animate-fade-in { animation: fade-in 200ms ease-out both; }
+@utility animate-sheet-up { animation: sheet-up 340ms var(--ease-out-soft) both; }
+@utility animate-float { animation: float 5s ease-in-out infinite; }
+@utility animate-twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+@utility animate-scan-sweep { animation: scan-sweep 2.2s ease-in-out infinite; }
+@utility animate-bracket { animation: bracket-pulse 1.8s ease-in-out infinite; }
+@utility animate-shake { animation: shake 280ms ease-in-out; }
+@utility animate-orbit { animation: orbit 24s linear infinite; }
+@utility animate-draw {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: draw 480ms 160ms var(--ease-out-soft) forwards;
+}
+@utility skeleton {
+  background: linear-gradient(90deg, var(--surface-raised) 25%, var(--border) 50%, var(--surface-raised) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* Press feedback for anything tappable. */
+@utility pressable {
+  transition: transform 140ms var(--ease-out-soft), background-color 160ms, color 160ms, opacity 160ms, box-shadow 160ms;
+  /* Not while a nested control is the thing being pressed: shrinking the
+     container would slide that control out from under the finger. */
+  &:active:not(:disabled):not(:has(button:active, a:active)) { transform: scale(0.97); }
+}
+
+/* Collapsible height without measuring: grid rows 0fr ↔ 1fr. */
+@utility collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms var(--ease-out-soft);
+  & > * { overflow: hidden; }
+  &[data-open="true"] { grid-template-rows: 1fr; }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@utility tabular { font-variant-numeric: tabular-nums; }
+
+@utility safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+@utility safe-top { padding-top: max(12px, env(safe-area-inset-top)); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
 }

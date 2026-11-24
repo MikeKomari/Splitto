@@ -1,19 +1,27 @@
-import "./App.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SkeletonTheme } from "react-loading-skeleton";
 import { RouterProvider } from "react-router-dom";
-import { router } from "./pages/router";
+import { Toaster } from "react-hot-toast";
+import { router } from "./router";
 
-const client = new QueryClient();
-
-function App() {
+export default function App() {
   return (
-    <QueryClientProvider client={client}>
-      <SkeletonTheme baseColor="#202024" highlightColor="#2a2c36">
-        <RouterProvider router={router} />
-      </SkeletonTheme>
-    </QueryClientProvider>
+    <>
+      <RouterProvider router={router} />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "var(--surface)",
+            color: "var(--text)",
+            border: "1px solid var(--border)",
+            borderRadius: "12px",
+            boxShadow: "var(--shadow-pop)",
+            fontSize: "14px",
+          },
+          success: { iconTheme: { primary: "var(--success)", secondary: "var(--surface)" } },
+          error: { iconTheme: { primary: "var(--danger)", secondary: "var(--surface)" } },
+        }}
+      />
+    </>
   );
 }
-
-export default App;

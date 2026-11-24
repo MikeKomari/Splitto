@@ -1,31 +1,34 @@
 {
-  "name": "pwatemplate",
+  "name": "splitto-client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "ocr:assets": "node scripts/copy-ocr-assets.mjs",
+    "predev": "node scripts/copy-ocr-assets.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/copy-ocr-assets.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@fontsource/hanken-grotesk": "^5.2.6",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "@fontsource/sora": "^5.3.0",
     "@tailwindcss/vite": "^4.1.8",
-    "@tanstack/react-query": "^5.81.2",
+    "@tesseract.js-data/eng": "^1.0.0",
     "axios": "^1.10.0",
-    "html2canvas": "^1.4.1",
+    "html-to-image": "^1.11.11",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-hook-form": "^7.59.0",
     "react-hot-toast": "^2.5.2",
-    "react-loading-skeleton": "^3.5.0",
     "react-router-dom": "^7.6.2",
     "tailwindcss": "^4.1.8",
+    "tesseract.js": "^7.0.0",
     "vite-plugin-pwa": "^1.0.0",
-    "zod": "^3.25.67",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
