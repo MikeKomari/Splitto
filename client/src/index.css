@@ -7,7 +7,9 @@
  * colors, so light/dark and a future accent swap are a one-file change.
  */
 
-:root {
+/* .theme-light pins a subtree to light (the shareable image is always light). */
+:root,
+.theme-light {
   /* Moon neutrals (~80% of a screen) */
   --bg: #fbfafd;
   --surface: #ffffff;
@@ -270,6 +272,11 @@
 }
 
 @utility tabular { font-variant-numeric: tabular-nums; }
+
+/* Freeze a subtree mid-capture: no half-faded cards in exported images. */
+@utility no-motion {
+  &, & * { animation: none !important; transition: none !important; }
+}
 
 @utility safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 @utility safe-top { padding-top: max(12px, env(safe-area-inset-top)); }
