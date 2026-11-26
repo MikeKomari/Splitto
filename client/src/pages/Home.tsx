@@ -1,6 +1,7 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ArrowRight, Plus, ReceiptText, ScanLine } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { NanashiMark } from "@/components/layout/NanashiMark";
 import { useDraft } from "@/store/draftStore";
@@ -36,7 +37,10 @@ export default function Home() {
           <p className="text-[13px] text-muted">{greeting()}</p>
           <h1 className="text-[28px] leading-9">Dashboard</h1>
         </div>
-        <Avatar avatar={friends[0]?.avatar ?? 64} size="sm" />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Avatar avatar={friends[0]?.avatar ?? 64} size="sm" />
+        </div>
       </header>
 
       {/* Bill carousel: "Scan bill" pill + in-progress + recent bills */}

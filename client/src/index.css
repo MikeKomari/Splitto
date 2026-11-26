@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind dark: utilities follow the chosen theme, not only the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Splitto design tokens = Nanashi design system (product base, accent: violet).
  * Source of truth for values: the Nanashi design system artifact. See design.md.
@@ -59,43 +62,45 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f0d14;
-    --surface: #18161f;
-    --surface-raised: #221f2d;
-    --border: #2d2a3a;
-    --border-strong: #7b768c;
-    --text: #eeecf3;
-    --text-muted: #a29db2;
+/*
+ * Dark theme. The app resolves the user's choice (light by default, dark, or
+ * follow the phone) to data-theme on <html>; see src/lib/theme.ts.
+ */
+:root[data-theme="dark"] {
+  --bg: #0f0d14;
+  --surface: #18161f;
+  --surface-raised: #221f2d;
+  --border: #2d2a3a;
+  --border-strong: #7b768c;
+  --text: #eeecf3;
+  --text-muted: #a29db2;
 
-    --primary: #a283e6;
-    --primary-hover: #b79cf0;
-    --on-primary: #0f0d14;
-    --primary-subtle: #271d3f;
-    --primary-subtle-text: #c9b6f5;
-    --focus-ring: #b79cf0;
+  --primary: #a283e6;
+  --primary-hover: #b79cf0;
+  --on-primary: #0f0d14;
+  --primary-subtle: #271d3f;
+  --primary-subtle-text: #c9b6f5;
+  --focus-ring: #b79cf0;
 
-    --star-text: #ffc857;
-    --gold-100: #3a2f14;
+  --star-text: #ffc857;
+  --gold-100: #3a2f14;
 
-    --success: #3eb489;
-    --warning: #f5a65b;
-    --danger: #f07a8c;
-    --info: #7aa7f2;
+  --success: #3eb489;
+  --warning: #f5a65b;
+  --danger: #f07a8c;
+  --info: #7aa7f2;
 
-    --tile-1: #271d3f;
-    --tile-2: #3a2f14;
-    --tile-3: #10302d;
-    --tile-4: #0e2a3d;
-    --tile-5: #3a1426;
+  --tile-1: #271d3f;
+  --tile-2: #3a2f14;
+  --tile-3: #10302d;
+  --tile-4: #0e2a3d;
+  --tile-5: #3a1426;
 
-    --chart-bar: #2d2a3a;
+  --chart-bar: #2d2a3a;
 
-    --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
 
-    color-scheme: dark;
-  }
+  color-scheme: dark;
 }
 
 @theme inline {

@@ -1,8 +1,10 @@
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { router } from "./router";
+import { useThemeSync } from "@/lib/theme";
 
 export default function App() {
+  useThemeSync();
   return (
     <>
       <RouterProvider router={router} />

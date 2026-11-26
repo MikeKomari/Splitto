@@ -2,6 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Github, Lock, ScanLine, Users, WifiOff } from "lucide-react";
 import { NightIllustration } from "@/components/brand/NightIllustration";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { prefersApp } from "@/lib/device";
 
 const REPO = "https://github.com/MikeKomari/Splitto";
@@ -49,6 +50,7 @@ export default function Landing() {
             <a href={REPO} target="_blank" rel="noreferrer" className="hidden text-[14px] font-medium text-muted hover:text-text sm:inline">
               GitHub
             </a>
+            <ThemeToggle className="hidden sm:inline-grid" />
             <LaunchButton />
           </nav>
         </div>

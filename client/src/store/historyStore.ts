@@ -55,9 +55,23 @@ export const useHistory = create<HistoryState>()(
   )
 );
 
-type PrefsState = { onboarded: boolean; setOnboarded: () => void };
+export type ThemePref = "light" | "dark" | "system";
+type PrefsState = {
+  onboarded: boolean;
+  /** Light by default; "system" follows the phone. */
+  theme: ThemePref;
+  setOnboarded: () => void;
+  setTheme: (t: ThemePref) => void;
+};
 export const usePrefs = create<PrefsState>()(
-  persist((set) => ({ onboarded: false, setOnboarded: () => set({ onboarded: true }) }), {
-    name: "splitto.prefs.v1",
-  })
+  persist(
+    (set) => ({
+      onboarded: false,
+      theme: "light",
+      setOnboarded: () => set({ onboarded: true }),
+      setTheme: (theme) => set({ theme }),
+    }),
+    // Key is read by the pre-paint script in index.html; keep them in sync.
+    { name: "splitto.prefs.v1" }
+  )
 );

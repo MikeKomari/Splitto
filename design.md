@@ -12,9 +12,10 @@ Splitto is a mobile-first PWA for splitting a restaurant bill: scan the receipt,
 
 1. **Phone first.** Designed at 390 px wide. Content is capped at 448 px (`max-w-md`) on larger screens. Every tap target is at least 44 px.
 2. **One action per screen.** There is one primary (violet) button per view, pinned to the bottom where the thumb is.
-3. **Neutral sky, violet for actions, gold is rare.** About 80% Moon neutrals, 15% violet, at most 5% Star Gold. Gold marks one highlight per screen (the "In progress" badge, the star in the illustration).
-4. **Trust the numbers.** Totals always reconcile to the rupiah. When the scanner is unsure, the screen says so; it never guesses quietly.
-5. **Motion explains, never decorates.** Animations are short (120–420 ms) and ease out. They never block input and switch off under "reduce motion".
+3. **Light by default, user's choice.** A Light / Dark / Auto switch sits on Home (and the homepage header). Auto follows the phone. The choice is saved on the device and applied before the first paint, so there's no flash.
+4. **Neutral sky, violet for actions, gold is rare.** About 80% Moon neutrals, 15% violet, at most 5% Star Gold. Gold marks one highlight per screen (the "In progress" badge, the star in the illustration).
+5. **Trust the numbers.** Totals always reconcile to the rupiah. When the scanner is unsure, the screen says so; it never guesses quietly.
+6. **Motion explains, never decorates.** Animations are short (120–420 ms) and ease out. They never block input and switch off under "reduce motion".
 
 ## 2. Colour tokens (Nanashi, violet accent)
 

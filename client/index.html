@@ -4,10 +4,19 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/Splitto_logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#FBFAFD" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0F0D14" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FBFAFD" />
     <meta name="description" content="Scan a receipt, tap who had what, done. Free on-device scanning." />
     <title>Splitto</title>
+    <script>
+      // Apply the saved theme before first paint (light by default) so there's no flash.
+      (function () {
+        var pref = "light";
+        try { pref = (JSON.parse(localStorage.getItem("splitto.prefs.v1")) || {}).state.theme || "light"; } catch (e) {}
+        var dark = pref === "dark" || (pref === "system" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.documentElement.style.colorScheme = dark ? "dark" : "light";
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
